@@ -1,0 +1,10 @@
+{
+  "database_path": "/var/lib/casaos/db/local-storage.db",
+  "service_name": "zimaos-local-storage.service",
+  "mount_roots": ["/media", "/DATA/.media", "/var/lib/casaos_data/.media"],
+  "backup_dir": "/var/lib/zsm/backups",
+  "report_dir": "/var/lib/zsm/reports",
+  "log_dir": "/var/log/zsm",
+  "stop_service_during_write": true,
+  "theme": "dark"
+}
