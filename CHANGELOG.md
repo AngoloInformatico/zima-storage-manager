@@ -1,16 +1,16 @@
 # Changelog
 
-## v3.0.0-rc5
+## v3.0.0-rc6 - 2026-07-19
 
-- introdotto il file unico `VERSION`;
-- aggiunto controllo automatico di coerenza della versione;
-- aggiunto installer/updater ZimaOS a un solo comando;
-- migrazione automatica di backup, report e log dai container precedenti;
-- aggiunto rollback automatico durante l'aggiornamento;
-- verifiche automatiche di healthcheck, versione e mount persistenti;
-- Compose completo con metadati ZimaOS per i volumi persistenti;
-- README completo con anteprima dashboard;
-- pipeline limitata al ramo `main`.
+- la schermata principale mostra soltanto UUID realmente presenti in `lsblk`;
+- i record obsoleti del database non vengono più mostrati come dispositivi;
+- la rinomina modifica realmente la LABEL del filesystem;
+- supporto LABEL per NTFS, exFAT, FAT/VFAT, EXT2/3/4, BTRFS e XFS;
+- aggiornamento coordinato di LABEL, record `o_disk` e punto di montaggio;
+- smontaggio, rimontaggio, verifica finale e rollback automatico;
+- blocco dei filesystem non supportati e dei mount di sistema protetti;
+- diagnostica con conteggio dei record obsoleti esclusi;
+- immagine Docker aggiornata con gli strumenti filesystem necessari.
 
 ## v3.0.0-rc5 - 2026-07-19
 

@@ -29,14 +29,25 @@ def manager(tmp_path: Path, dry_run: bool = True) -> StorageManager:
     return StorageManager(cfg, dry_run=dry_run)
 
 
+def _mock_live(instance):
+    from zsm.models import DiskRecord
+    instance.system.get_live_disk = lambda record: DiskRecord(
+        uuid=record.uuid, mount_point=record.mount_point, db_id=record.db_id,
+        label="NAS2", device="/dev/sdz1", fs_type="ntfs", size="1T",
+        active_mounts=(record.mount_point,),
+    )
+    instance.system.assert_rename_safe = lambda disk: None
+    return instance
+
+
 def test_rename_preserves_existing_mount_root(tmp_path):
-    result = manager(tmp_path).rename("abc", "NAS3")
+    result = _mock_live(manager(tmp_path)).rename("abc", "NAS3")
     assert result["new"] == "/DATA/.media/NAS3"
 
 
 def test_rename_rejects_same_name(tmp_path):
     with pytest.raises(ValueError, match="coincide"):
-        manager(tmp_path).rename("ABC", "NAS2")
+        _mock_live(manager(tmp_path)).rename("ABC", "NAS2")
 
 
 def test_restore_rejects_file_outside_backup_directory(tmp_path):

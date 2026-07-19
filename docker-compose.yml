@@ -2,7 +2,7 @@ name: zima-storage-manager
 
 services:
   zima-storage-manager:
-    image: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc5
+    image: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc6
     container_name: zima-storage-manager
     hostname: zima-storage-manager
     restart: unless-stopped
@@ -83,8 +83,8 @@ x-casaos:
     en_us: Manage ZimaOS storage safely
     it_it: Gestisci in sicurezza i dischi ZimaOS
   description:
-    en_us: Rename disk mount records, create persistent backups, restore the storage database and run diagnostics from a protected web interface.
-    it_it: Rinomina i dischi, crea backup persistenti, ripristina il database di archiviazione ed esegue la diagnostica da un'interfaccia web protetta.
+    en_us: Rename filesystem labels and ZimaOS mount records, hide stale devices, create persistent backups and run diagnostics from a protected web interface.
+    it_it: Rinomina realmente le etichette dei filesystem e i record ZimaOS, nasconde i dispositivi obsoleti e crea backup persistenti da un'interfaccia web protetta.
   tips:
     before_install:
       en_us: Change the default ZSM_PASSWORD after importing the Compose file.

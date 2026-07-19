@@ -1,8 +1,8 @@
 # Zima Storage Manager
 
-Interfaccia web per gestire in sicurezza i nomi dei dischi e i punti di montaggio utilizzati da ZimaOS.
+Interfaccia web per rinominare realmente le etichette dei filesystem e sincronizzare i punti di montaggio utilizzati da ZimaOS.
 
-![Versione](https://img.shields.io/badge/version-v3.0.0--rc5-blue)
+![Versione](https://img.shields.io/badge/version-v3.0.0--rc6-blue)
 ![ZimaOS](https://img.shields.io/badge/ZimaOS-1.6.2-blue)
 ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-blue)
 ![Licenza](https://img.shields.io/badge/license-BSD--3--Clause-green)
@@ -11,12 +11,13 @@ Interfaccia web per gestire in sicurezza i nomi dei dischi e i punti di montaggi
 
 ![Dashboard di Zima Storage Manager](./img/zima-storage-manager-dashboard.png)
 
-> Zima Storage Manager modifica il nome con cui ZimaOS registra e monta il disco, mantenendo coerenti il database Local Storage e i percorsi di montaggio.
+> Zima Storage Manager modifica la LABEL del filesystem, il record Local Storage e il punto di montaggio, con backup e rollback automatici.
 
 ## Funzioni principali
 
-- rilevamento dei dischi registrati in ZimaOS;
-- rinomina sicura dei dischi e dei punti di montaggio;
+- visualizzazione dei soli dischi realmente rilevati, senza record fantasma;
+- rinomina reale della LABEL per NTFS, exFAT, FAT, EXT, BTRFS e XFS;
+- sincronizzazione del database ZimaOS e del punto di montaggio;
 - backup automatico prima di ogni modifica;
 - backup manuali e ripristino del database;
 - controllo dell'integrità SQLite;
@@ -29,7 +30,7 @@ Interfaccia web per gestire in sicurezza i nomi dei dischi e i punti di montaggi
 
 ## Compatibilità verificata
 
-La release `v3.0.0-rc5` è progettata e verificata per:
+La release `v3.0.0-rc6` è progettata per:
 
 ```text
 ZimaOS 1.6.2
@@ -43,7 +44,7 @@ Porta Web: 8787
 Per installare o aggiornare una precedente RC:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/v3.0.0-rc5/scripts/install-zimaos.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/v3.0.0-rc6/scripts/install-zimaos.sh | sudo bash
 ```
 
 Lo script ufficiale:
@@ -69,11 +70,11 @@ Cartella locale completa
         ↓
 GitHub / main
         ↓
-Tag v3.0.0-rc5
+Tag v3.0.0-rc6
         ↓
 GitHub Actions
         ↓
-Immagine GHCR v3.0.0-rc5
+Immagine GHCR v3.0.0-rc6
         ↓
 Updater ZimaOS
         ↓
@@ -85,7 +86,7 @@ Il file `VERSION` è la sorgente della versione. La CI impedisce la pubblicazion
 ## Immagine Docker
 
 ```text
-ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc5
+ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc6
 ```
 
 ## Dati persistenti
@@ -120,7 +121,7 @@ sudo docker exec "$ZSM_CONTAINER" python -c "import zsm; print(zsm.__version__)"
 Il risultato atteso è:
 
 ```text
-3.0.0-rc5
+3.0.0-rc6
 ```
 
 ## Installazione nativa systemd
@@ -133,7 +134,7 @@ curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-mana
 
 ## Sicurezza
 
-Prima di applicare una modifica, ZSM crea e verifica un backup, arresta temporaneamente il servizio Local Storage, aggiorna il database, controlla il risultato e ripristina il backup in caso di errore.
+Prima di applicare una modifica, ZSM crea e verifica un backup, arresta temporaneamente il servizio Local Storage, smonta il volume, modifica la LABEL, aggiorna il database, rimonta il disco e verifica il risultato. In caso di errore tenta il rollback della LABEL e ripristina il database.
 
 Non esporre direttamente la porta `8787` su Internet. Per l'accesso remoto è consigliata una VPN privata come Tailscale.
 
