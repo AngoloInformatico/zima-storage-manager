@@ -29,7 +29,7 @@ Interfaccia web per gestire in sicurezza i nomi dei dischi e i punti di montaggi
 
 ## Compatibilità verificata
 
-La release `v3.0.0-rc7` è progettata e verificata per:
+La release `v3.0.0-rc8` è progettata e verificata per:
 
 ```text
 ZimaOS 1.6.2
@@ -43,7 +43,7 @@ Porta Web: 8787
 Per installare o aggiornare una precedente RC:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/v3.0.0-rc7/scripts/install-zimaos.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/v3.0.0-rc8/scripts/install-zimaos.sh | sudo bash
 ```
 
 Lo script ufficiale:
@@ -69,11 +69,11 @@ Cartella locale completa
         ↓
 GitHub / main
         ↓
-Tag v3.0.0-rc7
+Tag v3.0.0-rc8
         ↓
 GitHub Actions
         ↓
-Immagine GHCR v3.0.0-rc7
+Immagine GHCR v3.0.0-rc8
         ↓
 Updater ZimaOS
         ↓
@@ -85,7 +85,7 @@ Il file `VERSION` è la sorgente della versione. La CI impedisce la pubblicazion
 ## Immagine Docker
 
 ```text
-ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc7
+ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc8
 ```
 
 ## Dati persistenti
@@ -120,7 +120,7 @@ sudo docker exec "$ZSM_CONTAINER" python -c "import zsm; print(zsm.__version__)"
 Il risultato atteso è:
 
 ```text
-3.0.0-rc7
+3.0.0-rc8
 ```
 
 ## Installazione nativa systemd

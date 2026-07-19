@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.0-rc8
+
+- Usa `findmnt -S <device>` come unica fonte dei mount reali prima della rinomina.
+- Salta correttamente `umount` quando il dispositivo è già smontato.
+- Non passa più al comando `umount` i percorsi obsoleti memorizzati nel database.
+- Sostituisce `fuser -vm` con il più compatibile `fuser -m`.
+- Verifica nuovamente la tabella mount dopo ogni smontaggio e prima della modifica della LABEL.
+
 ## 3.0.0-rc7
 
 - Consente rinomine ripetute anche quando il volume USB è già montato.

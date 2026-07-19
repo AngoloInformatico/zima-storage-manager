@@ -94,9 +94,11 @@ class StorageManager:
                     self.system.service("stop", self.config.service_name)
                     stopped = True
 
-                # RC7: una seconda rinomina deve funzionare anche quando il volume
-                # è montato. Lo smontaggio avviene dopo l'arresto di Local Storage.
-                result["unmounted"] = self.system.unmount_all(record.active_mounts)
+                # RC8: findmnt sul dispositivo è la fonte di verità. Un volume già
+                # smontato è valido; i mountpoint obsoleti del database non vengono
+                # mai passati a umount.
+                result["mounts_detected_before_unmount"] = self.system.mounts_for_device(record.device)
+                result["unmounted"] = self.system.unmount_device(record.device)
                 self.system.set_filesystem_label(record.device, record.fs_type, name)
                 label_changed = True
                 self.system.settle()

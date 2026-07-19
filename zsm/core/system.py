@@ -114,20 +114,65 @@ class SystemInspector:
             if mount in protected:
                 raise PermissionError(f"Volume di sistema protetto: {mount}")
 
+    def mounts_for_device(self, device: str) -> list[str]:
+        """Return only mount targets currently backed by *device*.
+
+        The database mount point and lsblk data can be stale after a rename or a
+        hot-plug cycle. findmnt is the source of truth immediately before an
+        unmount operation.
+        """
+        result = self._run(["findmnt", "-rn", "-S", device, "-o", "TARGET"])
+        if result.returncode not in {0, 1}:
+            raise RuntimeError(result.stderr or result.stdout or f"Impossibile leggere i mount di {device}")
+        return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
     def busy_processes(self, mount_point: str) -> str:
-        result = self._run(["fuser", "-vm", mount_point], timeout=15)
+        # BusyBox fuser, presente in alcune immagini, non supporta -v. Questo
+        # controllo è solo diagnostico e non deve causare un secondo errore.
+        result = self._run(["fuser", "-m", mount_point], timeout=15)
         text = "\n".join(x for x in (result.stdout, result.stderr) if x).strip()
         return text
 
+    def unmount_device(self, device: str) -> list[str]:
+        """Unmount the real, current targets for a block device.
+
+        A device that is already unmounted is a valid state and returns an empty
+        list. Stale database paths are never passed to umount.
+        """
+        mounts = self.mounts_for_device(device)
+        unmounted: list[str] = []
+        for mount in sorted(set(mounts), key=len, reverse=True):
+            result = self._run(["umount", mount], timeout=30)
+            if result.returncode:
+                # Re-read the mount table: a concurrent service may already have
+                # removed it, in which case the desired state has been reached.
+                if mount not in self.mounts_for_device(device):
+                    unmounted.append(mount)
+                    continue
+                busy = self.busy_processes(mount)
+                detail = f"\nProcessi che usano il volume:\n{busy}" if busy else ""
+                message = (result.stderr or result.stdout or "errore sconosciuto").strip()
+                raise RuntimeError(f"Impossibile smontare {mount}: {message}{detail}")
+            unmounted.append(mount)
+
+        remaining = self.mounts_for_device(device)
+        if remaining:
+            raise RuntimeError(
+                f"Il dispositivo {device} risulta ancora montato su: {', '.join(remaining)}"
+            )
+        return unmounted
+
     def unmount_all(self, mount_points: tuple[str, ...] | list[str]) -> list[str]:
+        """Legacy helper retained for API compatibility."""
         unmounted: list[str] = []
         for mount in sorted(set(mount_points), key=len, reverse=True):
             result = self._run(["umount", mount], timeout=30)
-            if result.returncode:
+            if result.returncode and "not mounted" not in (result.stderr or result.stdout).lower():
                 busy = self.busy_processes(mount)
                 detail = f"\nProcessi che usano il volume:\n{busy}" if busy else ""
                 raise RuntimeError(f"Impossibile smontare {mount}: {result.stderr or result.stdout}{detail}")
-            unmounted.append(mount)
+            if result.returncode == 0:
+                unmounted.append(mount)
         return unmounted
 
     def _first_available(self, commands: list[str]) -> str:

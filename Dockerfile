@@ -12,7 +12,7 @@ LABEL org.opencontainers.image.title="Zima Storage Manager" \
       org.opencontainers.image.description="Web UI for safely renaming ZimaOS disk mount records" \
       org.opencontainers.image.source="https://github.com/AngoloInformatico/zima-storage-manager" \
       org.opencontainers.image.licenses="BSD-3-Clause" \
-      org.opencontainers.image.version="3.0.0-rc7"
+      org.opencontainers.image.version="3.0.0-rc8"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends util-linux \
