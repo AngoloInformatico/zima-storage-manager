@@ -1,25 +1,106 @@
-# Troubleshooting
+# Risoluzione problemi — v3.0.0-rc10
 
-## Database not found
+## Il pannello non si apre
 
-Run `zsm status`, then verify `database_path` in `/etc/zsm/config.json`.
+Controlla il container:
 
-## Read-only database
+```bash
+sudo docker ps --filter name=zima-storage-manager
+```
 
-Real changes require `sudo`. Also verify filesystem state and database directory permissions.
+Leggi i log:
 
-## Service name differs
+```bash
+sudo docker logs --tail=200 zima-storage-manager
+```
 
-Discover it with `systemctl list-units '*local-storage*'` and update `service_name`.
+Verifica che la porta 8787 non sia usata da un'altra applicazione.
 
-## GUI does not open
+## Il container non è healthy
 
-A graphical session and Tk are required. Use the CLI on SSH-only systems.
+```bash
+curl -i http://127.0.0.1:8787/health
+```
 
-## Disk remains on the old mount after rename
+Se non risponde, riavvia il container:
 
-Safely eject the disk or reboot after confirming the database record. Do not forcibly unmount a busy disk without identifying processes that use it.
+```bash
+sudo docker restart zima-storage-manager
+```
 
-## Rollback
+## Il disco non appare nel tool
 
-Every real rename and restore creates a timestamped safety copy in `backup_dir`. Use `zsm backups` and `sudo zsm restore PATH`.
+```bash
+lsblk -o NAME,PATH,FSTYPE,LABEL,UUID,MOUNTPOINTS
+```
+
+Il disco deve avere un filesystem e un UUID validi. I record vecchi presenti soltanto nel database non vengono mostrati nella lista principale.
+
+## Il disco appare nel tool ma non in ZimaOS
+
+Controlla il servizio:
+
+```bash
+sudo systemctl status zimaos-local-storage.service
+```
+
+Poi riavvialo:
+
+```bash
+sudo systemctl restart zimaos-local-storage.service
+```
+
+Aggiorna la pagina Archiviazione di ZimaOS dopo alcuni secondi.
+
+## La rinomina viene bloccata perché il disco è occupato
+
+Individua i mount reali:
+
+```bash
+findmnt -rn -S /dev/sdX1 -o TARGET
+```
+
+Sostituisci `/dev/sdX1` con il dispositivo corretto. Arresta Jellyfin, Navidrome, condivisioni SMB o altre applicazioni che stanno usando quel volume, quindi riprova.
+
+## Controllare l'etichetta reale
+
+```bash
+sudo blkid /dev/sdX1
+```
+
+oppure:
+
+```bash
+lsblk -o NAME,FSTYPE,LABEL,UUID,MOUNTPOINTS
+```
+
+## Verificare il database
+
+```bash
+sudo sqlite3 /var/lib/casaos/db/local-storage.db \
+"SELECT id,uuid,mount_point,is_deleted FROM o_disk ORDER BY id;"
+```
+
+Non modificare manualmente il database senza averne prima creato una copia.
+
+## Ripristino da backup
+
+Usa la scheda **Backup** del pannello. Se il pannello non è disponibile, individua i file in:
+
+```text
+/DATA/AppData/zima-storage-manager/backups
+```
+
+## Aggiornamento non riuscito
+
+Lo script di aggiornamento salva il Compose precedente in:
+
+```text
+/DATA/AppData/zima-storage-manager/updater-backups
+```
+
+Controlla inoltre:
+
+```bash
+sudo docker logs --tail=200 zima-storage-manager
+```

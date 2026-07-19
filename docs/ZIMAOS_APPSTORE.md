@@ -1,29 +1,45 @@
-# Installazione manuale in ZimaOS App Store
+# Installazione come app ZimaOS — v3.0.0-rc10
 
-## Immagine
+## Metodo consigliato
 
-- Immagine Docker: `ghcr.io/angoloinformatico/zima-storage-manager`
-- Tag: `v3.0.0-rc4`
-- Titolo: `Zima Storage Manager`
-- Web UI: `http://IP_ZIMAOS:8787/`
-- Rete: `bridge`
-- Modalità privilegiata: attiva
-- PID namespace: `host`
-- Politica di riavvio: `unless-stopped`
+Per la maggior parte degli utenti è sufficiente aprire il terminale di ZimaOS e incollare:
 
-## Porta
+```bash
+curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/v3.0.0-rc10/scripts/install-zimaos.sh | sudo bash
+```
 
-- Host: `8787`
-- Container: `8787`
-- Protocollo: TCP
+Lo script prepara automaticamente la configurazione e verifica l'avvio.
+
+## Importazione manuale del Compose
+
+Usa questa procedura solo se preferisci importare l'app dall'interfaccia grafica di ZimaOS.
+
+1. Apri **App Store**.
+2. Seleziona l'opzione per installare o importare un'app personalizzata.
+3. Importa il file `docker-compose.yml` presente nella release `v3.0.0-rc10`.
+4. Controlla che la porta pubblicata sia `8787`.
+5. Imposta una password sicura nella variabile `ZSM_PASSWORD`.
+6. Salva e avvia l'app.
+
+## Impostazioni principali
+
+```text
+Immagine: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc10
+Container: zima-storage-manager
+Porta: 8787 TCP
+Riavvio: unless-stopped
+Modalità privilegiata: attiva
+PID namespace: host
+```
 
 ## Variabili d'ambiente
 
-| Nome | Valore |
+| Variabile | Valore consigliato |
 |---|---|
 | `ZSM_HOST` | `0.0.0.0` |
 | `ZSM_PORT` | `8787` |
-| `ZSM_CONTAINER_MODE` | `true` |
+| `ZSM_PASSWORD` | una password sicura |
+| `ZSM_CONTAINER_MODE` | `1` |
 | `ZSM_HOST_NAMESPACE` | `1` |
 | `ZSM_SERVICE_NAME` | `auto` |
 | `ZSM_DATABASE_PATH` | `/var/lib/casaos/db/local-storage.db` |
@@ -32,34 +48,23 @@
 | `ZSM_LOG_DIR` | `/var/log/zsm` |
 | `TZ` | `Europe/Rome` |
 
-Inserire soltanto il valore, senza prefissi come `Valore:` e senza spazi iniziali.
+## Cartelle persistenti
 
-## Volumi
-
-| Host | Container | Modalità |
-|---|---|---|
-| `/var/lib/casaos` | `/var/lib/casaos` | lettura/scrittura |
-| `/media` | `/media` | lettura/scrittura |
-| `/DATA/.media` | `/DATA/.media` | lettura/scrittura |
-| `/var/lib/casaos_data` | `/var/lib/casaos_data` | lettura/scrittura |
-| `/dev` | `/dev` | lettura/scrittura |
-| `/run/udev` | `/run/udev` | sola lettura |
-| `/run/dbus/system_bus_socket` | `/run/dbus/system_bus_socket` | lettura/scrittura |
-| `/DATA/AppData/zima-storage-manager/data` | `/var/lib/zsm` | lettura/scrittura |
-| `/DATA/AppData/zima-storage-manager/logs` | `/var/log/zsm` | lettura/scrittura |
-
-Prima dell'installazione si possono creare le directory persistenti da SSH:
-
-```bash
-sudo mkdir -p /DATA/AppData/zima-storage-manager/{data,logs}
+```text
+/DATA/AppData/zima-storage-manager/backups
+/DATA/AppData/zima-storage-manager/reports
+/DATA/AppData/zima-storage-manager/logs
 ```
 
-## Controlli
+## Verifica
 
 ```bash
 sudo docker ps --filter name=zima-storage-manager
 sudo docker logs --tail=100 zima-storage-manager
-curl -i http://127.0.0.1:8787/health
 ```
 
-Lo stato deve passare da `health: starting` a `healthy`.
+Apri quindi:
+
+```text
+http://IP_DEL_TUO_ZIMAOS:8787
+```

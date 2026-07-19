@@ -1,7 +1,7 @@
 FROM python:3.12-slim AS builder
 
 WORKDIR /build
-COPY pyproject.toml README.md LICENSE ./
+COPY pyproject.toml README.md LICENSE NOTICE .//
 COPY zsm ./zsm
 RUN python -m pip install --upgrade pip \
     && pip wheel --no-cache-dir --wheel-dir /wheels .
@@ -11,7 +11,7 @@ FROM python:3.12-slim
 LABEL org.opencontainers.image.title="Zima Storage Manager" \
       org.opencontainers.image.description="Web UI for safely renaming ZimaOS disk mount records" \
       org.opencontainers.image.source="https://github.com/AngoloInformatico/zima-storage-manager" \
-      org.opencontainers.image.licenses="BSD-3-Clause" \
+      org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.version="3.0.0-rc10"
 
 RUN apt-get update \

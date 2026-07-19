@@ -1,67 +1,72 @@
-# Docker su ZimaOS
+# Guida Docker — v3.0.0-rc10
 
-## Stato
+Questa guida è destinata a chi vuole avviare Zima Storage Manager con Docker Compose senza usare lo script automatico di ZimaOS.
 
-Il pacchetto Docker è disponibile come modalità sperimentale. ZSM deve modificare il database di ZimaOS e controllare servizi dell'host, quindi il contenitore richiede privilegi elevati. L'installazione nativa con systemd resta la modalità raccomandata per il primo test.
+## Immagine
 
-## Installazione con immagine GHCR
-
-Crea una cartella di lavoro e copia al suo interno:
-
-- `docker-compose.yml`
-- `config.example.json`
-- `.env.example`, rinominandolo in `.env`
-
-Modifica `.env` e imposta una password robusta:
-
-```dotenv
-ZSM_PASSWORD=una-password-lunga-e-unica
+```text
+ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc10
 ```
 
-Avvia:
+Sono disponibili immagini per `amd64` e `arm64`.
+
+## Avvio con Docker Compose
+
+Scarica il file `docker-compose.yml` della release e posizionalo in una cartella dedicata.
+
+Crea le cartelle persistenti:
 
 ```bash
-docker compose pull
-docker compose up -d
+sudo mkdir -p /DATA/AppData/zima-storage-manager/{backups,reports,logs}
+```
+
+Crea un file `.env` nella stessa cartella del Compose:
+
+```dotenv
+ZSM_PASSWORD=scegli-una-password-sicura
+TZ=Europe/Rome
+```
+
+Avvia il container:
+
+```bash
+sudo docker compose pull
+sudo docker compose up -d
 ```
 
 Apri:
 
 ```text
-http://IP_ZIMAOS:8787
+http://IP_DEL_SERVER:8787
 ```
 
-## Build locale
-
-Nel `docker-compose.yml`, commenta la riga `image:` e abilita:
-
-```yaml
-build: .
-```
-
-Poi esegui:
+## Controlli
 
 ```bash
-docker compose up -d --build
+sudo docker compose ps
+sudo docker logs --tail=200 zima-storage-manager
+curl -i http://127.0.0.1:8787/health
 ```
+
+Lo stato finale deve essere `healthy`.
 
 ## Aggiornamento
 
-```bash
-docker compose pull
-docker compose up -d
-```
-
-## Diagnostica
+Modifica il tag dell'immagine nel Compose, poi esegui:
 
 ```bash
-docker compose ps
-docker compose logs --tail=200 zima-storage-manager
+sudo docker compose pull
+sudo docker compose up -d --force-recreate --remove-orphans
 ```
 
-## Sicurezza
+## Arresto
 
-Il contenitore usa `privileged: true` e `pid: host` per accedere ai namespace dell'host. Non esporre la porta 8787 su Internet; usala solo in LAN o tramite VPN, ad esempio Tailscale.
+```bash
+sudo docker compose down
+```
 
+I backup, i report e i log restano nelle cartelle persistenti dell'host.
 
-Per l’importazione grafica in ZimaOS vedere [ZIMAOS_APPSTORE.md](ZIMAOS_APPSTORE.md).
+## Nota di sicurezza
+
+Il container usa `privileged: true` e `pid: host` perché deve interagire con i dispositivi e con il servizio Local Storage dell'host. Non pubblicare la porta 8787 su Internet.

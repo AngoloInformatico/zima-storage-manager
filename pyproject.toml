@@ -8,7 +8,7 @@ version = "3.0.0-rc10"
 description = "A simple and safe web interface for renaming ZimaOS disk mount names."
 readme = "README.md"
 requires-python = ">=3.10"
-license = "MIT"
+license = "Apache-2.0"
 authors = [{name = "Alex Lignola"}]
 dependencies = []
 keywords = ["zimaos", "storage", "sqlite", "disk", "administration"]

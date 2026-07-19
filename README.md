@@ -1,96 +1,116 @@
 # Zima Storage Manager
 
-Interfaccia web per gestire in sicurezza i nomi dei dischi e i punti di montaggio utilizzati da ZimaOS.
-
-![Versione](https://img.shields.io/badge/version-v3.0.0--rc5-blue)
+![Versione](https://img.shields.io/badge/version-v3.0.0--rc10-blue)
 ![ZimaOS](https://img.shields.io/badge/ZimaOS-1.6.2-blue)
 ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-blue)
-![Licenza](https://img.shields.io/badge/license-BSD--3--Clause-green)
+![Licenza](https://img.shields.io/badge/license-Apache--2.0-green)
+
+Zima Storage Manager è un piccolo pannello web per rinominare in sicurezza i dischi collegati a ZimaOS.
+
+Il tool aggiorna l'etichetta reale del filesystem, il database Local Storage e il punto di montaggio. Prima delle operazioni importanti crea un backup e, in caso di errore, prova a ripristinare la situazione precedente.
 
 ## Anteprima
 
 ![Dashboard di Zima Storage Manager](./img/zima-storage-manager-dashboard.png)
 
-> Zima Storage Manager modifica il nome con cui ZimaOS registra e monta il disco, mantenendo coerenti il database Local Storage e i percorsi di montaggio.
+## Cosa permette di fare
 
-## Funzioni principali
+- visualizzare i dischi realmente collegati;
+- rinominare l'etichetta del filesystem e il nome mostrato da ZimaOS;
+- creare, ripristinare ed eliminare i backup;
+- consultare e svuotare la cronologia;
+- eseguire controlli diagnostici su database, servizio e mount;
+- evitare la visualizzazione di vecchi dispositivi non più presenti.
 
-- rilevamento dei dischi registrati in ZimaOS;
-- rinomina sicura dei dischi e dei punti di montaggio;
-- backup automatico prima di ogni modifica;
-- backup manuali e ripristino del database;
-- controllo dell'integrità SQLite;
-- cronologia e report delle operazioni;
-- autenticazione web e protezione CSRF;
-- diagnostica del database, del servizio e dei mount;
-- supporto container ZimaOS con namespace host;
-- persistenza di backup, report, log e cronologia;
-- immagini Docker `linux/amd64` e `linux/arm64`.
+## Requisiti
 
-## Compatibilità verificata
-
-La release `v3.0.0-rc10` è progettata e verificata per:
+Questa documentazione si riferisce alla versione **v3.0.0-rc10**, verificata su:
 
 ```text
 ZimaOS 1.6.2
-Database: /var/lib/casaos/db/local-storage.db
-Servizio: zimaos-local-storage.service
-Porta Web: 8787
+Docker
+Porta web 8787
 ```
 
-## Installazione e aggiornamento ZimaOS con un solo comando
+## Installazione facile su ZimaOS
 
-Per installare o aggiornare una precedente RC:
+Questa è la procedura consigliata anche per chi non ha esperienza con Linux.
+
+### 1. Apri il terminale di ZimaOS
+
+Accedi a ZimaOS dal browser, apri l'app **Terminale** oppure collegati al server tramite SSH.
+
+### 2. Copia e incolla questo comando
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/v3.0.0-rc10/scripts/install-zimaos.sh | sudo bash
 ```
 
-Lo script ufficiale:
+Quando richiesto, inserisci la password dell'utente amministratore. Durante la digitazione la password potrebbe non essere visibile: è normale.
 
-1. individua il container precedente;
-2. copia sull'host eventuali backup, report e log rimasti nel container;
-3. salva il Compose installato;
-4. scarica il Compose dal tag GitHub della release;
-5. conserva la password esistente oppure ne genera una sicura;
-6. crea le cartelle persistenti;
-7. scarica e avvia l'immagine corretta da GHCR;
-8. verifica healthcheck, versione e mount;
-9. esegue il rollback automatico in caso di errore.
+### 3. Attendi il completamento
 
-Non è necessario modificare manualmente file YAML con `nano` o `sed`.
+Lo script scarica l'app, crea le cartelle necessarie, avvia il container e verifica che funzioni correttamente.
 
-## Catena di distribuzione
+Al termine mostra anche il codice di accesso al pannello web. Conservalo.
 
-La sorgente ufficiale segue sempre questo percorso:
+### 4. Apri il pannello
+
+Nel browser visita:
 
 ```text
-Cartella locale completa
-        ↓
-GitHub / main
-        ↓
-Tag v3.0.0-rc10
-        ↓
-GitHub Actions
-        ↓
-Immagine GHCR v3.0.0-rc10
-        ↓
-Updater ZimaOS
-        ↓
-Container verificato
+http://IP_DEL_TUO_ZIMAOS:8787
 ```
 
-Il file `VERSION` è la sorgente della versione. La CI impedisce la pubblicazione quando `VERSION`, pacchetto Python, Compose, README, Dockerfile e tag GitHub non coincidono.
-
-## Immagine Docker
+Esempio:
 
 ```text
-ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc10
+http://192.168.1.20:8787
 ```
 
-## Dati persistenti
+Inserisci il codice mostrato al termine dell'installazione.
 
-I dati rimangono sull'host anche quando il container viene ricreato:
+## Aggiornamento
+
+Per aggiornare una versione già installata alla v3.0.0-rc10:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/v3.0.0-rc10/scripts/update-zimaos.sh | sudo bash
+```
+
+## Controllo rapido
+
+```bash
+sudo docker ps --filter name=zima-storage-manager
+```
+
+Il container deve risultare `Up` e `healthy`.
+
+Per controllare la versione:
+
+```bash
+sudo docker exec zima-storage-manager python -c 'import zsm; print(zsm.__version__)'
+```
+
+Risultato atteso:
+
+```text
+3.0.0-rc10
+```
+
+## Uso di base
+
+1. Apri la scheda **Dischi**.
+2. Seleziona il disco da rinominare.
+3. Inserisci il nuovo nome.
+4. Leggi la schermata di conferma.
+5. Conferma la rinomina e attendi il risultato.
+
+Non spegnere il server e non scollegare il disco durante l'operazione.
+
+Prima di rinominare un disco che contiene file usati da Jellyfin, Navidrome o altre app, arresta temporaneamente quelle app.
+
+## Dati salvati sul server
 
 ```text
 /DATA/AppData/zima-storage-manager/backups
@@ -98,44 +118,13 @@ I dati rimangono sull'host anche quando il container viene ricreato:
 /DATA/AppData/zima-storage-manager/logs
 ```
 
-Montati nel container come:
-
-```text
-/var/lib/zsm/backups
-/var/lib/zsm/reports
-/var/log/zsm
-```
-
-## Controlli manuali dopo l'installazione
-
-```bash
-sudo docker ps --filter name=zima-storage-manager
-```
-
-```bash
-ZSM_CONTAINER=$(sudo docker ps --filter name=zima-storage-manager --format '{{.Names}}' | head -n 1)
-sudo docker exec "$ZSM_CONTAINER" python -c "import zsm; print(zsm.__version__)"
-```
-
-Il risultato atteso è:
-
-```text
-3.0.0-rc10
-```
-
-## Installazione nativa systemd
-
-Rimane disponibile per ambienti che non utilizzano il container ZimaOS:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/install.sh | sudo bash
-```
+I dati rimangono disponibili anche quando il container viene aggiornato o ricreato.
 
 ## Sicurezza
 
-Prima di applicare una modifica, ZSM crea e verifica un backup, arresta temporaneamente il servizio Local Storage, aggiorna il database, controlla il risultato e ripristina il backup in caso di errore.
+Zima Storage Manager deve accedere ai dischi e al servizio Local Storage di ZimaOS, quindi il container usa privilegi elevati.
 
-Non esporre direttamente la porta `8787` su Internet. Per l'accesso remoto è consigliata una VPN privata come Tailscale.
+Usalo solo nella rete locale o tramite una VPN privata come Tailscale. Non esporre direttamente la porta `8787` su Internet.
 
 ## Documentazione
 
@@ -147,11 +136,13 @@ Non esporre direttamente la porta `8787` su Internet. Per l'accesso remoto è co
 
 ## Autore
 
-**Created by Alex Lignola**
+**Zima Storage Manager è stato creato da Alex Lignola.**
 
 - GitHub: [AngoloInformatico](https://github.com/AngoloInformatico)
 - YouTube: [Angolo Informatico](https://www.youtube.com/@AngoloInformatico)
 
 ## Licenza
 
-BSD 3-Clause. Consulta [LICENSE](LICENSE).
+Il progetto è distribuito con licenza **Apache License 2.0**.
+
+Consulta [LICENSE](LICENSE) e [NOTICE](NOTICE). Le redistribuzioni e le opere derivate devono rispettare gli obblighi di licenza e conservare gli avvisi di attribuzione applicabili contenuti nel file `NOTICE`.

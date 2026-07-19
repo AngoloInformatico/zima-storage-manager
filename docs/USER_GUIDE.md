@@ -1,19 +1,68 @@
-# User Guide
+# Guida utente — v3.0.0-rc10
 
-## GUI
+## Accesso
 
-Run `zsm-gui`. The left navigation uses identical button dimensions, spacing, typography and hover behavior. The active section remains highlighted.
+Apri nel browser:
 
-The Rename page defaults to simulation. Enter the filesystem UUID and desired mount directory name, run the simulation, review the result, then disable simulation and rerun with root privileges.
+```text
+http://IP_DEL_TUO_ZIMAOS:8787
+```
 
-## CLI
+Inserisci il codice di accesso configurato durante l'installazione.
 
-- `zsm status`: paths and service state
-- `zsm disks`: merged database/device/mount inventory as JSON
-- `zsm audit`: checks and creates HTML, Markdown and JSON reports
-- `sudo zsm backup`: snapshot the database
-- `sudo zsm rename --uuid UUID --name NAME`: change the stored mount point
-- `zsm backups`: list snapshots
-- `sudo zsm restore PATH`: restore a snapshot
+## Scheda Dischi
 
-Global flags `--config PATH` and `--dry-run` must precede the subcommand.
+Mostra i dispositivi realmente rilevati dal sistema.
+
+Per rinominare un disco:
+
+1. individua il disco usando nome, UUID, filesystem e percorso;
+2. premi **Rinomina disco**;
+3. inserisci il nuovo nome;
+4. controlla attentamente il riepilogo;
+5. conferma e attendi il completamento.
+
+Il tool prova a mantenere coerenti:
+
+- etichetta del filesystem;
+- record nel database Local Storage;
+- punto di montaggio;
+- visualizzazione in ZimaOS.
+
+Prima della modifica viene creato un backup di sicurezza.
+
+## Scheda Backup
+
+Permette di:
+
+- creare un backup manuale;
+- ripristinare un backup;
+- eliminare un singolo backup;
+- eliminare tutti i backup.
+
+Il ripristino sostituisce il database Local Storage attivo. Leggi sempre la conferma prima di procedere.
+
+## Scheda Cronologia
+
+Mostra le operazioni eseguite dal tool.
+
+Il pulsante **Svuota cronologia** elimina gli eventi registrati dopo una conferma obbligatoria.
+
+## Scheda Diagnostica
+
+Controlla:
+
+- disponibilità del database;
+- integrità SQLite;
+- servizio Local Storage;
+- dischi rilevati;
+- mount e cartelle persistenti.
+
+## Buone pratiche
+
+- verifica sempre l'UUID prima di rinominare;
+- non scollegare il disco durante la modifica;
+- arresta le app che stanno usando il disco;
+- conserva almeno un backup recente;
+- non rinominare dischi di sistema o volumi critici;
+- usa il pannello soltanto da LAN o VPN privata.
