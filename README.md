@@ -140,6 +140,24 @@ Usalo solo nella rete locale o tramite una VPN privata come Tailscale. Non espor
 - [Risoluzione problemi](docs/TROUBLESHOOTING.md)
 - [Architettura](docs/ARCHITECTURE.md)
 
+## ⚠️ Avvertenza importante
+
+Zima Storage Manager interviene direttamente sui dischi, sulle etichette dei filesystem, sui punti di montaggio e sul database di archiviazione di ZimaOS.
+
+Utilizzare il software con la massima attenzione e solo dopo aver effettuato un backup dei dati importanti.
+
+Prima di eseguire una rinomina o un ripristino:
+
+- verificare di aver selezionato il disco corretto;
+- chiudere eventuali applicazioni che stanno utilizzando il disco;
+- non spegnere o riavviare il server durante l'operazione;
+- non scollegare fisicamente il dispositivo durante la modifica;
+- controllare sempre il risultato prima di continuare con altre operazioni.
+
+Il software viene fornito senza garanzie. L'autore non è responsabile per perdita di dati, danneggiamento dei filesystem, configurazioni errate o interruzioni dei servizi causate da un utilizzo improprio, da errori hardware o da modifiche non previste dell'ambiente ZimaOS.
+
+L'utilizzo del software avviene sotto la piena responsabilità dell'utente.
+
 ## Autore
 
 **Zima Storage Manager è stato creato da Alex Lignola.**
