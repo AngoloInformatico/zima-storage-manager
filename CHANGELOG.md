@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.0-alpha1
+
+- Avviata la linea 3.0 con pipeline CI per Python 3.10, 3.11 e 3.12.
+- Aggiunti controlli automatici Ruff, pytest e compilazione dei moduli.
+- Aggiunta build Docker automatica a ogni push e pull request.
+- Aggiunta pubblicazione multi-architettura su GitHub Container Registry per tag `v*`.
+- Ottimizzato il Dockerfile con build multi-stage e immagine runtime più pulita.
+- Aggiornato Docker Compose per usare l'immagine GHCR e richiedere la password tramite `.env`.
+- Aggiunto `.env.example` per evitare password predefinite nel repository.
+
 ## 2.1.0
 
 - Corretta la rinomina per conservare il percorso radice già usato dal record (`/media`, `/DATA/.media` o `/var/lib/casaos_data/.media`).

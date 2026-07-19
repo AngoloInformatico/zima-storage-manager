@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, quote
 from .config import Config
 from .core.manager import StorageManager
 
-APP_VERSION = "2.1.0"
+APP_VERSION = "3.0.0-alpha1"
 SESSION_TTL = 12 * 60 * 60
 SESSIONS: dict[str, float] = {}
 

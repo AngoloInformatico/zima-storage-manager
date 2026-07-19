@@ -97,3 +97,7 @@ Istruzioni complete: [`docs/DOCKER.md`](docs/DOCKER.md).
 - verifica dei file Docker e Compose a livello statico.
 
 Il test finale sul server ZimaOS reale è comunque necessario, perché versioni diverse di ZimaOS possono usare percorsi del database o nomi del servizio differenti.
+
+## Docker e GitHub Container Registry
+
+Le immagini dei tag di release vengono pubblicate automaticamente per `linux/amd64` e `linux/arm64` su GitHub Container Registry. La configurazione completa è descritta in `docs/DOCKER.md`.

@@ -1,43 +1,64 @@
-# Esecuzione con Docker su ZimaOS
+# Docker su ZimaOS
 
-## Valutazione tecnica
+## Stato
 
-ZSM non è una normale applicazione web: deve leggere e modificare il database host di ZimaOS e fermare/riavviare il servizio `zimaos-local-storage.service` durante la scrittura. Per questo il contenitore richiede:
+Il pacchetto Docker è disponibile come modalità sperimentale. ZSM deve modificare il database di ZimaOS e controllare servizi dell'host, quindi il contenitore richiede privilegi elevati. L'installazione nativa con systemd resta la modalità raccomandata per il primo test.
 
-- accesso in scrittura a `/var/lib/casaos/db`;
-- accesso ai percorsi di montaggio;
-- `pid: host` e modalità `privileged`;
-- `nsenter` per eseguire `systemctl`, `lsblk` e `findmnt` nel namespace dell'host.
+## Installazione con immagine GHCR
 
-Questa configurazione funziona come pacchetto Docker sperimentale, ma concede al contenitore privilegi elevati. L'installazione nativa tramite `systemd` resta la modalità consigliata e più semplice da controllare.
+Crea una cartella di lavoro e copia al suo interno:
 
-## Avvio
+- `docker-compose.yml`
+- `config.example.json`
+- `.env.example`, rinominandolo in `.env`
 
-1. Modifica `docker-compose.yml` e sostituisci `CAMBIA_QUESTO_CODICE` con una password robusta.
-2. Verifica in `config.example.json` il percorso del database e il nome del servizio della tua versione di ZimaOS.
-3. Avvia:
+Modifica `.env` e imposta una password robusta:
+
+```dotenv
+ZSM_PASSWORD=una-password-lunga-e-unica
+```
+
+Avvia:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Apri:
+
+```text
+http://IP_ZIMAOS:8765
+```
+
+## Build locale
+
+Nel `docker-compose.yml`, commenta la riga `image:` e abilita:
+
+```yaml
+build: .
+```
+
+Poi esegui:
 
 ```bash
 docker compose up -d --build
 ```
-
-4. Apri `http://IP_ZIMAOS:8765`.
 
 ## Aggiornamento
 
 ```bash
-git pull
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
-## Arresto
+## Diagnostica
 
 ```bash
-docker compose down
+docker compose ps
+docker compose logs --tail=200 zima-storage-manager
 ```
 
-I backup restano nel volume Docker `zsm-data`.
+## Sicurezza
 
-## Avvertenza
-
-Non pubblicare la porta 8765 su Internet. Usala solo nella rete locale o tramite una VPN come Tailscale.
+Il contenitore usa `privileged: true` e `pid: host` per accedere ai namespace dell'host. Non esporre la porta 8765 su Internet; usala solo in LAN o tramite VPN, ad esempio Tailscale.
