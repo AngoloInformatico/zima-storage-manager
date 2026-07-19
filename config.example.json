@@ -1,6 +1,6 @@
 {
   "database_path": "/var/lib/casaos/db/local-storage.db",
-  "service_name": "zimaos-local-storage.service",
+  "service_name": "auto",
   "mount_roots": [
     "/media",
     "/DATA/.media",

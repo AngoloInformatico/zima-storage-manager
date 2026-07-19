@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .runner import CommandRunner
 from ..models import DiskRecord
+from ..constants import SERVICE_CANDIDATES
 
 SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._ -]{0,63}$")
 
@@ -88,13 +89,24 @@ class SystemInspector:
             record.active_mounts = tuple(mounts.get(record.uuid.casefold(), []))
         return records
 
+    def resolve_service(self, service: str) -> str:
+        if service and service != "auto":
+            return service
+        for candidate in SERVICE_CANDIDATES:
+            result = self._run(["systemctl", "show", candidate, "--property=LoadState", "--value"])
+            if result.returncode == 0 and result.stdout not in {"", "not-found"}:
+                return candidate
+        return SERVICE_CANDIDATES[0]
+
     def service_state(self, service: str) -> str:
-        result = self._run(["systemctl", "is-active", service])
+        resolved = self.resolve_service(service)
+        result = self._run(["systemctl", "is-active", resolved])
         return result.stdout or ("unknown" if result.returncode == 127 else "inactive")
 
     def service(self, action: str, service: str) -> None:
         if action not in {"start", "stop", "restart"}:
             raise ValueError(f"Azione systemd non consentita: {action}")
-        result = self._run(["systemctl", action, service])
+        resolved = self.resolve_service(service)
+        result = self._run(["systemctl", action, resolved])
         if result.returncode:
-            raise RuntimeError(result.stderr or f"Impossibile eseguire {action} su {service}")
+            raise RuntimeError(result.stderr or f"Impossibile eseguire {action} su {resolved}")

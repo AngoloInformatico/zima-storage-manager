@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.0-rc2
+
+- aggiunta installazione come app personalizzata ZimaOS tramite Docker Compose e metadati `x-casaos`;
+- aggiunto rilevamento automatico del servizio Local Storage;
+- aggiunti override di configurazione tramite variabili d’ambiente;
+- aggiunta identificazione della modalità container nella diagnostica;
+- aggiunta icona applicazione e guida App Store;
+- aggiunti test per configurazione container e rilevamento servizi.
+
 ## 3.0.0-rc1
 
 - Pagina diagnostica con stato database, servizio e configurazione attiva.

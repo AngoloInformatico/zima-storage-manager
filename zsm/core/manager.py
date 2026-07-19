@@ -121,12 +121,16 @@ class StorageManager:
             database_ok = True
         except Exception as exc:
             database_error = str(exc)
+        resolved_service = self.system.resolve_service(self.config.service_name)
         return {
             "database": str(self.config.database_path),
             "database_ok": database_ok,
             "database_error": database_error,
-            "service": self.system.service_state(self.config.service_name),
-            "service_name": self.config.service_name,
+            "service": self.system.service_state(resolved_service),
+            "service_name": resolved_service,
+            "service_configured": self.config.service_name,
+            "container_mode": self.config.container_mode,
+            "host_namespace": self.system.host_namespace,
             "mount_roots": [str(root) for root in self.config.mount_roots],
             "backup_dir": str(self.config.backup_dir),
             "backup_count": len(self.backups()),

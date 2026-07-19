@@ -1,26 +1,97 @@
+name: zima-storage-manager
+
 services:
   zima-storage-manager:
-    image: ghcr.io/angoloinformatico/zima-storage-manager:latest
-    # Per sviluppo locale, commenta image e abilita: build: .
+    image: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc2
     container_name: zima-storage-manager
+    hostname: zima-storage-manager
     restart: unless-stopped
     privileged: true
     pid: host
     ports:
-      - "8765:8765"
+      - target: 8765
+        published: "8765"
+        protocol: tcp
     environment:
-      ZSM_PASSWORD: "${ZSM_PASSWORD:?Imposta ZSM_PASSWORD nel file .env}"
+      TZ: ${TZ:-Europe/Rome}
+      ZSM_PASSWORD: ${ZSM_PASSWORD:-zima-storage-manager}
+      ZSM_CONTAINER_MODE: "1"
       ZSM_HOST_NAMESPACE: "1"
-      ZSM_CONFIG: "/etc/zsm/config.json"
+      ZSM_SERVICE_NAME: ${ZSM_SERVICE_NAME:-auto}
     volumes:
-      - /var/lib/casaos/db:/var/lib/casaos/db
-      - /media:/media
-      - /DATA/.media:/DATA/.media
-      - /var/lib/casaos_data/.media:/var/lib/casaos_data/.media
-      - ./config.example.json:/etc/zsm/config.json:ro
-      - zsm-data:/var/lib/zsm
-      - zsm-logs:/var/log/zsm
+      - type: bind
+        source: /var/lib/casaos/db
+        target: /var/lib/casaos/db
+      - type: bind
+        source: /media
+        target: /media
+      - type: bind
+        source: /DATA/.media
+        target: /DATA/.media
+      - type: bind
+        source: /var/lib/casaos_data/.media
+        target: /var/lib/casaos_data/.media
+      - type: bind
+        source: /dev
+        target: /dev
+      - type: bind
+        source: /run/udev
+        target: /run/udev
+        read_only: true
+      - type: volume
+        source: zsm-data
+        target: /var/lib/zsm
+      - type: volume
+        source: zsm-logs
+        target: /var/log/zsm
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
 volumes:
   zsm-data:
   zsm-logs:
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: zima-storage-manager
+  author: Alex Lignola
+  category: Utilities
+  developer: Angolo Informatico
+  icon: https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/develop-v3/assets/icon.png
+  index: /
+  port_map: "8765"
+  scheme: http
+  store_app_id: zima-storage-manager
+  title:
+    en_us: Zima Storage Manager
+    it_it: Zima Storage Manager
+  tagline:
+    en_us: Manage ZimaOS storage safely
+    it_it: Gestisci in sicurezza i dischi ZimaOS
+  description:
+    en_us: Rename disk mount records, create backups, restore the storage database and run diagnostics from a protected web interface.
+    it_it: Rinomina i dischi, crea backup, ripristina il database di archiviazione ed esegue la diagnostica da una interfaccia web protetta.
+  tips:
+    before_install:
+      en_us: Change the default ZSM_PASSWORD after importing the Compose file.
+      it_it: Cambia la password ZSM_PASSWORD predefinita dopo avere importato il file Compose.
+  envs:
+    - container: ZSM_PASSWORD
+      description:
+        en_us: Web access password
+        it_it: Password di accesso web
+    - container: TZ
+      description:
+        en_us: Time zone
+        it_it: Fuso orario
+  ports:
+    - container: "8765"
+      description:
+        en_us: Web interface
+        it_it: Interfaccia web

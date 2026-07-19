@@ -62,3 +62,6 @@ docker compose logs --tail=200 zima-storage-manager
 ## Sicurezza
 
 Il contenitore usa `privileged: true` e `pid: host` per accedere ai namespace dell'host. Non esporre la porta 8765 su Internet; usala solo in LAN o tramite VPN, ad esempio Tailscale.
+
+
+Per l’importazione grafica in ZimaOS vedere [ZIMAOS_APPSTORE.md](ZIMAOS_APPSTORE.md).

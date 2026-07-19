@@ -89,7 +89,7 @@ La modalità Docker è quindi disponibile per test e futura integrazione nello s
 
 Istruzioni complete: [`docs/DOCKER.md`](docs/DOCKER.md).
 
-## Verifiche della release candidate 3.0.0-rc1
+## Verifiche della release candidate 3.0.0-rc2
 
 - compilazione dei moduli Python;
 - installazione del pacchetto in ambiente virtuale pulito;
@@ -106,3 +106,8 @@ Le immagini dei tag di release vengono pubblicate automaticamente per `linux/amd
 ## Funzioni Web v3 RC1
 
 La Web UI include gestione dischi, backup manuali, ripristino con doppia conferma, cronologia e pagina diagnostica. Tutte le azioni di scrittura richiedono autenticazione, token CSRF e una conferma monouso con scadenza. I backup più vecchi vengono rimossi automaticamente secondo `backup_retention` (25 per impostazione predefinita).
+
+
+## Installazione come app ZimaOS
+
+La release RC2 include un `docker-compose.yml` con metadati `x-casaos`, supporto amd64/arm64, persistenza dei backup e rilevamento automatico del servizio Local Storage. Consulta [docs/ZIMAOS_APPSTORE.md](docs/ZIMAOS_APPSTORE.md).
