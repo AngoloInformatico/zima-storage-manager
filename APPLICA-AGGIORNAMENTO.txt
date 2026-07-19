@@ -1,18 +1,20 @@
-COME APPLICARE L'AGGIORNAMENTO
+AGGIORNAMENTO ALLA VERSIONE 2.0.0
 
 1. Estrai questo ZIP.
 2. Copia tutti i file estratti dentro:
    C:\Progetti\zima-storage-manager
-3. Conferma la sostituzione dei file esistenti.
+3. Conferma la sostituzione dei file.
 4. Apri PowerShell nella cartella del progetto.
 5. Esegui:
 
 git add .
-git commit -m "Add simple web interface and guided installer"
+git commit -m "Release Zima Storage Manager 2.0"
 git push
 
-Dopo il push, su ZimaOS installa con:
+Dopo il push, installa o aggiorna ZSM sul server.
 
-git clone https://github.com/AngoloInformatico/zima-storage-manager.git
-cd zima-storage-manager
-sudo bash install.sh
+Nuova installazione:
+curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/install.sh | sudo bash
+
+Aggiornamento di un'installazione v2:
+sudo zsm-update

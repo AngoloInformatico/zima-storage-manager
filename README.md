@@ -1,68 +1,82 @@
 # Zima Storage Manager
 
-Zima Storage Manager permette di rinominare in modo semplice il punto di montaggio di un disco su ZimaOS.
+Una semplice interfaccia web per cambiare il **nome del punto di montaggio usato da ZimaOS**.
 
-Non serve conoscere Python, SQLite o i comandi interni di ZimaOS. Dopo l'installazione si usa dal browser.
+> ZSM non cambia l'etichetta interna BTRFS/EXT4 del filesystem. Cambia il nome con cui ZimaOS registra e monta il disco, per esempio da `NAS2` a `NAS3`.
 
-## Installazione semplice
+## Installazione con un solo comando
 
 Apri il terminale SSH di ZimaOS e incolla:
 
 ```bash
-git clone https://github.com/AngoloInformatico/zima-storage-manager.git
-cd zima-storage-manager
-sudo bash install.sh
+curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/install.sh | sudo bash
 ```
 
-Al termine verranno mostrati:
+Se `curl` non è disponibile:
 
-- l'indirizzo da aprire nel browser, normalmente `http://IP_ZIMAOS:8765`;
-- un codice di accesso personale.
+```bash
+wget -qO- https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/install.sh | sudo bash
+```
+
+Alla fine dell'installazione compariranno l'indirizzo dell'app e il codice di accesso.
 
 ## Utilizzo
 
-1. Apri l'indirizzo mostrato dall'installer.
-2. Seleziona il disco dall'elenco.
-3. Scrivi il nuovo nome, per esempio `NAS3`.
-4. Inserisci il codice di accesso.
-5. Premi **Rinomina disco**.
-6. Riavvia ZimaOS o scollega e ricollega il disco se il nuovo nome non appare subito.
+1. Apri dal browser l'indirizzo mostrato dall'installer.
+2. Inserisci il codice di accesso.
+3. Scegli il disco dalla schermata.
+4. Premi **Cambia nome**.
+5. Scrivi il nuovo nome.
+6. Conferma.
 
-ZSM crea automaticamente un backup del database prima di ogni modifica. Non formatta il disco e non cancella i file.
+Non è necessario conoscere UUID, SQLite, Python o comandi Linux.
+
+## Sicurezza
+
+Prima di ogni modifica ZSM:
+
+- crea una copia di sicurezza del database;
+- ferma temporaneamente il servizio di archiviazione;
+- verifica la modifica;
+- ripristina il database in caso di errore.
+
+Il servizio è protetto da un codice di accesso generato durante l'installazione. Non esporre la porta `8765` direttamente su Internet.
+
+Per rivedere il codice:
+
+```bash
+sudo grep ZSM_PASSWORD /etc/zsm/zsm.env
+```
 
 ## Aggiornamento
 
 ```bash
-cd zima-storage-manager
-git pull
-sudo bash install.sh
+sudo zsm-update
+```
+
+## Stato del servizio
+
+```bash
+sudo systemctl status zima-storage-manager
 ```
 
 ## Disinstallazione
 
+Dal repository:
+
 ```bash
-cd zima-storage-manager
 sudo bash uninstall.sh
 ```
 
-Backup e configurazione vengono conservati.
+Backup e configurazione non vengono cancellati automaticamente.
 
-## Sicurezza
+## Requisiti
 
-Il servizio gira come root perché deve modificare il database di sistema di ZimaOS. È protetto da un codice generato durante l'installazione. Non esporre la porta `8765` direttamente su Internet.
+- ZimaOS con `systemd`
+- Python 3.10 o successivo
+- modulo `python3-venv`
+- `curl` oppure `wget`
 
-Per visualizzare nuovamente il codice:
+## Nota importante
 
-```bash
-sudo cat /etc/zsm/zsm.env
-```
-
-## Compatibilità
-
-Il progetto è stato progettato per ZimaOS e usa il database:
-
-```text
-/var/lib/casaos/db/local-storage.db
-```
-
-Prima di usarlo su versioni nuove di ZimaOS, verifica sempre che il database esista.
+Il progetto interviene sul database di archiviazione di ZimaOS. Usalo solo dopo aver verificato che il percorso configurato in `/etc/zsm/config.json` corrisponda alla tua versione di ZimaOS.
