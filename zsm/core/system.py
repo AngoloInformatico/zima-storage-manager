@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
+import time
 from pathlib import Path
 
 from .runner import CommandRunner
@@ -12,7 +12,6 @@ from ..constants import SERVICE_CANDIDATES
 
 SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._ -]{0,63}$")
 SUPPORTED_FILESYSTEMS = {"ntfs", "exfat", "vfat", "fat", "fat16", "fat32", "ext2", "ext3", "ext4", "btrfs", "xfs"}
-PROTECTED_MOUNTS = {"/", "/boot", "/boot/efi", "/DATA", "/media", "/var/lib/docker", "/var/lib/casaos"}
 
 
 def validate_name(name: str) -> str:
@@ -34,16 +33,10 @@ class SystemInspector:
         self.runner = runner or CommandRunner()
         self.host_namespace = os.getenv("ZSM_HOST_NAMESPACE", "0") == "1"
 
-    def _run(self, args: list[str]):
+    def _run(self, args: list[str], timeout: int = 30):
         if self.host_namespace:
             args = ["nsenter", "-t", "1", "-m", "-p", "--", *args]
-        return self.runner.run(args)
-
-    def _must_run(self, args: list[str], action: str):
-        result = self._run(args)
-        if result.returncode:
-            raise RuntimeError(result.stderr or result.stdout or f"Operazione non riuscita: {action}")
-        return result
+        return self.runner.run(args, timeout=timeout)
 
     def lsblk(self) -> list[dict]:
         result = self._run(["lsblk", "-J", "-o", "NAME,PATH,TYPE,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINTS"])
@@ -54,7 +47,7 @@ class SystemInspector:
             output = []
             for node in nodes:
                 output.append(node)
-                output += flatten(node.get("children", []))
+                output += flatten(node.get("children", []) or [])
             return output
 
         try:
@@ -62,12 +55,12 @@ class SystemInspector:
         except (json.JSONDecodeError, TypeError):
             return []
 
-    def blocks_by_uuid(self) -> dict[str, dict]:
-        return {
-            str(item.get("uuid") or "").casefold(): item
-            for item in self.lsblk()
-            if item.get("uuid")
-        }
+    def block_by_uuid(self, uuid: str) -> dict | None:
+        wanted = uuid.casefold()
+        for item in self.lsblk():
+            if str(item.get("uuid") or "").casefold() == wanted:
+                return item
+        return None
 
     def active_mounts(self) -> dict[str, list[str]]:
         result = self._run(["findmnt", "-J", "-o", "SOURCE,TARGET,UUID"])
@@ -81,7 +74,7 @@ class SystemInspector:
                 target = node.get("target") or ""
                 if uuid and target:
                     mounts.setdefault(uuid.casefold(), []).append(target)
-                walk(node.get("children", []))
+                walk(node.get("children", []) or [])
 
         try:
             walk(json.loads(result.stdout).get("filesystems", []))
@@ -89,93 +82,117 @@ class SystemInspector:
             return {}
         return mounts
 
-    def enrich(self, records: list[DiskRecord], active_only: bool = False) -> list[DiskRecord]:
-        blocks = self.blocks_by_uuid()
+    def enrich(self, records: list[DiskRecord], live_only: bool = False) -> list[DiskRecord]:
+        blocks = {
+            str(item.get("uuid") or "").casefold(): item
+            for item in self.lsblk()
+            if item.get("uuid")
+        }
         mounts = self.active_mounts()
         output: list[DiskRecord] = []
         for record in records:
             block = blocks.get(record.uuid.casefold())
-            if active_only and not block:
+            if live_only and not block:
                 continue
             block = block or {}
             record.label = block.get("label") or ""
             record.device = block.get("path") or ""
-            record.fs_type = (block.get("fstype") or "").casefold()
+            record.fs_type = (block.get("fstype") or "").lower()
             record.size = block.get("size") or ""
             record.active_mounts = tuple(mounts.get(record.uuid.casefold(), []))
             output.append(record)
         return output
 
-    def get_live_disk(self, record: DiskRecord) -> DiskRecord:
-        enriched = self.enrich([record], active_only=True)
-        if not enriched:
-            raise RuntimeError("Il dispositivo non è attualmente rilevato dal sistema")
-        return enriched[0]
-
-    def assert_rename_safe(self, disk: DiskRecord) -> None:
-        if not disk.uuid or not disk.device:
-            raise RuntimeError("Dispositivo o UUID non disponibile")
-        fs = disk.fs_type.casefold()
+    def ensure_rename_safe(self, record: DiskRecord) -> None:
+        if not record.device:
+            raise RuntimeError("Il dispositivo non è attualmente rilevato")
+        fs = record.fs_type.lower()
         if fs not in SUPPORTED_FILESYSTEMS:
-            raise RuntimeError(f"Filesystem non supportato: {disk.fs_type or 'sconosciuto'}")
-        if disk.device in {"/dev/loop0", "/dev/loop1"} or disk.device.startswith("/dev/loop"):
-            raise RuntimeError("I dispositivi di sistema loop non possono essere rinominati")
-        for mount in disk.active_mounts:
-            normalized = os.path.normpath(mount)
-            if normalized in PROTECTED_MOUNTS or normalized.startswith("/var/lib/docker/"):
-                raise RuntimeError(f"Volume protetto perché montato su {mount}")
+            raise ValueError(f"Filesystem non supportato per la rinomina: {fs or 'sconosciuto'}")
+        protected = {"/", "/boot", "/boot/efi", "/DATA"}
+        for mount in record.active_mounts:
+            if mount in protected:
+                raise PermissionError(f"Volume di sistema protetto: {mount}")
 
-    def unmount_all(self, disk: DiskRecord) -> list[str]:
-        mounts = sorted(set(disk.active_mounts), key=len, reverse=True)
-        for mount in mounts:
-            self._must_run(["umount", mount], f"smontaggio di {mount}")
-        return mounts
+    def busy_processes(self, mount_point: str) -> str:
+        result = self._run(["fuser", "-vm", mount_point], timeout=15)
+        text = "\n".join(x for x in (result.stdout, result.stderr) if x).strip()
+        return text
 
-    def mount_device(self, device: str, target: str) -> None:
-        Path(target).mkdir(parents=True, exist_ok=True)
-        self._must_run(["mount", device, target], f"montaggio di {device}")
+    def unmount_all(self, mount_points: tuple[str, ...] | list[str]) -> list[str]:
+        unmounted: list[str] = []
+        for mount in sorted(set(mount_points), key=len, reverse=True):
+            result = self._run(["umount", mount], timeout=30)
+            if result.returncode:
+                busy = self.busy_processes(mount)
+                detail = f"\nProcessi che usano il volume:\n{busy}" if busy else ""
+                raise RuntimeError(f"Impossibile smontare {mount}: {result.stderr or result.stdout}{detail}")
+            unmounted.append(mount)
+        return unmounted
 
-    def remove_empty_mount_dirs(self, paths: list[str]) -> None:
-        for value in sorted(set(paths), key=len, reverse=True):
-            try:
-                path = Path(value)
-                if path.is_dir() and not any(path.iterdir()):
-                    path.rmdir()
-            except (OSError, PermissionError):
-                pass
-
-    def label_command(self, disk: DiskRecord, label: str) -> list[str]:
-        fs = disk.fs_type.casefold()
-        candidates: list[list[str]]
-        if fs == "ntfs":
-            candidates = [["ntfslabel", disk.device, label]]
-        elif fs == "exfat":
-            candidates = [["exfatlabel", disk.device, label], ["tune.exfat", "-L", label, disk.device]]
-        elif fs in {"vfat", "fat", "fat16", "fat32"}:
-            candidates = [["fatlabel", disk.device, label]]
-        elif fs in {"ext2", "ext3", "ext4"}:
-            candidates = [["e2label", disk.device, label]]
-        elif fs == "btrfs":
-            candidates = [["btrfs", "filesystem", "label", disk.device, label]]
-        elif fs == "xfs":
-            candidates = [["xfs_admin", "-L", label, disk.device]]
-        else:
-            raise RuntimeError(f"Filesystem non supportato: {fs}")
-
-        for command in candidates:
-            probe = self._run(["sh", "-c", f"command -v {command[0]}"])
-            if probe.returncode == 0:
+    def _first_available(self, commands: list[str]) -> str:
+        for command in commands:
+            result = self._run(["sh", "-c", f"command -v {command}"])
+            if result.returncode == 0 and result.stdout:
                 return command
-        names = " oppure ".join(item[0] for item in candidates)
-        raise RuntimeError(f"Comando necessario non disponibile: {names}")
+        raise RuntimeError("Comando necessario non disponibile: " + " oppure ".join(commands))
 
-    def set_label(self, disk: DiskRecord, label: str) -> None:
-        command = self.label_command(disk, label)
-        self._must_run(command, f"modifica etichetta {disk.device}")
+    def set_filesystem_label(self, device: str, fs_type: str, label: str) -> None:
+        fs = fs_type.lower()
+        if fs == "ntfs":
+            args = [self._first_available(["ntfslabel"]), device, label]
+        elif fs == "exfat":
+            command = self._first_available(["exfatlabel", "tune.exfat"])
+            args = [command, device, label] if command == "exfatlabel" else [command, "-L", label, device]
+        elif fs in {"vfat", "fat", "fat16", "fat32"}:
+            args = [self._first_available(["fatlabel"]), device, label]
+        elif fs in {"ext2", "ext3", "ext4"}:
+            args = [self._first_available(["e2label"]), device, label]
+        elif fs == "btrfs":
+            args = [self._first_available(["btrfs"]), "filesystem", "label", device, label]
+        elif fs == "xfs":
+            args = [self._first_available(["xfs_admin"]), "-L", label, device]
+        else:
+            raise ValueError(f"Filesystem non supportato: {fs}")
+        result = self._run(args, timeout=120)
+        if result.returncode:
+            raise RuntimeError(result.stderr or result.stdout or "Rinomina etichetta non riuscita")
 
-    def read_label(self, device: str) -> str:
-        result = self._run(["blkid", "-s", "LABEL", "-o", "value", device])
-        return result.stdout.strip() if result.returncode == 0 else ""
+    def settle(self) -> None:
+        self._run(["udevadm", "settle"], timeout=30)
+
+    def wait_for_label(self, uuid: str, label: str, timeout: int = 30) -> dict:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            block = self.block_by_uuid(uuid)
+            if block and str(block.get("label") or "") == label:
+                return block
+            time.sleep(1)
+        block = self.block_by_uuid(uuid) or {}
+        raise RuntimeError(f"Verifica LABEL fallita: attesa '{label}', rilevata '{block.get('label') or ''}'")
+
+    def wait_for_mount(self, uuid: str, target: str, timeout: int = 35) -> None:
+        deadline = time.monotonic() + timeout
+        wanted = str(Path(target))
+        while time.monotonic() < deadline:
+            mounts = self.active_mounts().get(uuid.casefold(), [])
+            if wanted in mounts:
+                return
+            time.sleep(1)
+        mounts = self.active_mounts().get(uuid.casefold(), [])
+        raise RuntimeError(f"Il volume non è stato rimontato su {target}. Mount attivi: {', '.join(mounts) or 'nessuno'}")
+
+    def remove_empty_old_mount_dirs(self, old_name: str, roots: list[Path]) -> list[str]:
+        removed: list[str] = []
+        for root in roots:
+            candidate = root / old_name
+            try:
+                if candidate.is_dir() and not any(candidate.iterdir()):
+                    candidate.rmdir()
+                    removed.append(str(candidate))
+            except (OSError, PermissionError):
+                continue
+        return removed
 
     def resolve_service(self, service: str) -> str:
         if service and service != "auto":
@@ -195,6 +212,6 @@ class SystemInspector:
         if action not in {"start", "stop", "restart"}:
             raise ValueError(f"Azione systemd non consentita: {action}")
         resolved = self.resolve_service(service)
-        result = self._run(["systemctl", action, resolved])
+        result = self._run(["systemctl", action, resolved], timeout=60)
         if result.returncode:
             raise RuntimeError(result.stderr or f"Impossibile eseguire {action} su {resolved}")

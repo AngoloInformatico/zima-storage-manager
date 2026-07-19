@@ -147,36 +147,29 @@ class AppHandler(BaseHTTPRequestHandler):
         cards = []
         for disk in disks:
             name = disk.label or Path(disk.mount_point).name or "Disco senza nome"
-            badges = [disk.size or "Dimensione sconosciuta", (disk.fs_type or "filesystem sconosciuto").upper(), "Rilevato"]
-            details = (f'<div class="small"><strong>Etichetta:</strong> {esc(disk.label or "—")}</div>'
-                       f'<div class="small"><strong>Dispositivo:</strong> <code>{esc(disk.device)}</code></div>'
-                       f'<div class="small"><strong>UUID:</strong> <code>{esc(disk.uuid)}</code></div>'
-                       f'<div class="small"><strong>Percorso:</strong> <code>{esc(disk.mount_point)}</code></div>')
-            cards.append(f'<article class="card"><div class="disk-top"><div class="disk-icon">🗄️</div><div><div class="disk-name">{esc(name)}</div><div class="small">{esc(disk.device)}</div></div></div><div class="meta">{"".join(f"<span class=badge>{esc(x)}</span>" for x in badges)}</div>{details}<a class="button" href="/rename?id={quote(disk.uuid)}">Rinomina disco</a></article>')
-        content = '<div class="grid">' + ''.join(cards) + '</div>' if cards else '<div class="card"><h2>Nessun disco rilevato</h2><p>I record non più associati a dispositivi fisici vengono esclusi automaticamente.</p></div>'
-        self._send(page("Dischi", self._header() + '<div class="card notice"><strong>Rinomina reale</strong><p class="small">La modifica aggiorna la LABEL del filesystem, il database ZimaOS e il punto di montaggio. Prima dell’operazione viene creato un backup SQLite verificato.</p></div>' + content))
+            badges = [disk.size or "Dimensione sconosciuta", (disk.fs_type or "filesystem sconosciuto").upper(), "Collegato" if disk.device else "Non collegato"]
+            cards.append(f'<article class="card"><div class="disk-top"><div class="disk-icon">🗄️</div><div><div class="disk-name">{esc(name)}</div><div class="small">{esc(disk.device or "Dispositivo non rilevato")}</div></div></div><div class="meta">{"".join(f"<span class=badge>{esc(x)}</span>" for x in badges)}</div><p class="small"><code>{esc(disk.mount_point)}</code></p><a class="button" href="/rename?id={quote(disk.uuid)}">Cambia nome</a></article>')
+        content = '<div class="grid">' + ''.join(cards) + '</div>' if cards else '<div class="card"><h2>Nessun disco disponibile</h2></div>'
+        self._send(page("Dischi", self._header() + '<div class="card notice"><strong>Operazione protetta</strong><p class="small">Prima di ogni modifica viene creato un backup SQLite verificato.</p></div>' + content))
 
     def _rename_page(self) -> None:
         uuid = parse_qs(urlparse(self.path).query).get("id", [""])[0]
-        try:
-            matches = [d for d in self.manager.disks() if d.uuid.casefold() == uuid.casefold()]
-            disk = matches[0] if matches else None
+        try: disk = self.manager.db.get_by_uuid(uuid)
         except Exception as exc: self._error(str(exc)); return
-        if not disk: self._error("Disco non rilevato o non disponibile.", HTTPStatus.NOT_FOUND); return
-        body = self._header() + f'<form class="card" method="post" action="/confirm"><h2>Rinomina disco</h2><p>Etichetta attuale: <code>{esc(disk.label or "senza etichetta")}</code></p><p class="small">Filesystem: <strong>{esc(disk.fs_type.upper())}</strong> · Dispositivo: <code>{esc(disk.device)}</code></p><label>Nuova etichetta</label><input name="name" maxlength="64" required autofocus><input type="hidden" name="uuid" value="{esc(uuid)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><div class="actions"><a class="button secondary" href="/">Annulla</a><button type="submit">Continua</button></div></form>'
-        self._send(page("Rinomina disco", body))
+        if not disk: self._error("Disco non trovato.", HTTPStatus.NOT_FOUND); return
+        body = self._header() + f'<form class="card" method="post" action="/confirm"><h2>Cambia nome</h2><p>Nome attuale: <code>{esc(Path(disk.mount_point).name)}</code></p><label>Nuovo nome</label><input name="name" maxlength="64" required autofocus><input type="hidden" name="uuid" value="{esc(uuid)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><div class="actions"><a class="button secondary" href="/">Annulla</a><button type="submit">Continua</button></div></form>'
+        self._send(page("Cambia nome", body))
 
     def _confirm(self, form: dict[str, str]) -> None:
         uuid, name = form.get("uuid", ""), form.get("name", "").strip()
         try:
-            matches = [d for d in self.manager.disks() if d.uuid.casefold() == uuid.casefold()]
-            disk = matches[0] if matches else None
-            if not disk: raise LookupError("Disco non rilevato")
+            disk = self.manager.db.get_by_uuid(uuid)
+            if not disk: raise LookupError("Disco non trovato")
             name = validate_name(name)
         except Exception as exc: self._error(str(exc)); return
         nonce = secrets.token_urlsafe(18); proof = hashlib.sha256(f"{self._session_id()}:{uuid}:{name}:{nonce}".encode()).hexdigest()
         session = self._session(); session[f"confirm:{proof}"] = time.time() + CONFIRM_TTL
-        body = self._header() + f'<form class="card notice" method="post" action="/apply"><h2>Conferma la rinomina reale</h2><p><code>{esc(disk.label or Path(disk.mount_point).name)}</code> → <code>{esc(name)}</code></p><p class="small">Verranno modificati l’etichetta del filesystem, il record ZimaOS e il punto di montaggio. Il volume sarà smontato e rimontato automaticamente.</p><input type="hidden" name="uuid" value="{esc(uuid)}"><input type="hidden" name="name" value="{esc(name)}"><input type="hidden" name="nonce" value="{esc(nonce)}"><input type="hidden" name="proof" value="{esc(proof)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><div class="actions"><a class="button secondary" href="/">Annulla</a><button class="danger" type="submit">Conferma e rinomina</button></div></form>'
+        body = self._header() + f'<form class="card notice" method="post" action="/apply"><h2>Conferma la modifica</h2><p><code>{esc(Path(disk.mount_point).name)}</code> → <code>{esc(name)}</code></p><input type="hidden" name="uuid" value="{esc(uuid)}"><input type="hidden" name="name" value="{esc(name)}"><input type="hidden" name="nonce" value="{esc(nonce)}"><input type="hidden" name="proof" value="{esc(proof)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><div class="actions"><a class="button secondary" href="/">Annulla</a><button class="danger" type="submit">Conferma e rinomina</button></div></form>'
         self._send(page("Conferma", body))
 
     def _apply(self, form: dict[str, str]) -> None:
@@ -186,7 +179,7 @@ class AppHandler(BaseHTTPRequestHandler):
         if not secrets.compare_digest(proof, expected) or deadline < time.time(): self._error("Conferma non valida o scaduta."); return
         try: result = self.manager.rename(uuid, name)
         except Exception as exc: self._error(f"Modifica non riuscita: {exc}"); return
-        self._send(page("Completato", self._header() + f'<div class="card success"><h2>Disco rinominato</h2><p>Nuova etichetta: <code>{esc(result["new_label"])}</code></p><p>Nuovo percorso: <code>{esc(result["new"])}</code></p><a class="button" href="/">Fine</a></div>'))
+        self._send(page("Completato", self._header() + f'<div class="card success"><h2>Nome modificato</h2><p>Nuovo percorso: <code>{esc(result["new"])}</code></p><a class="button" href="/">Fine</a></div>'))
 
     def _backups_page(self) -> None:
         try: backups = self.manager.backups()
@@ -244,7 +237,7 @@ class AppHandler(BaseHTTPRequestHandler):
         state_class = "success" if data["database_ok"] else "error"
         roots = "".join(f"<li><code>{esc(root)}</code></li>" for root in data["mount_roots"])
         error = f'<p class="small">{esc(data["database_error"])}</p>' if data["database_error"] else ""
-        body = self._header() + f'<div class="card {state_class}"><h2>Stato sistema</h2><div class="row"><span>Database</span><strong>{"OK" if data["database_ok"] else "ERRORE"}</strong></div><div class="row"><span>Servizio</span><strong>{esc(data["service"])}</strong></div><div class="row"><span>Backup disponibili</span><strong>{esc(data["backup_count"])}</strong></div><div class="row"><span>Record obsoleti esclusi</span><strong>{esc(data["stale_count"])}</strong></div>{error}</div><div class="card"><h2>Configurazione attiva</h2><p>Database: <code>{esc(data["database"])}</code></p><p>Servizio rilevato: <code>{esc(data["service_name"])}</code></p><p>Modalità: <code>{"Container ZimaOS" if data["container_mode"] else "Installazione nativa"}</code></p><p>Namespace host: <code>{"attivo" if data["host_namespace"] else "non attivo"}</code></p><p>Cartella backup: <code>{esc(data["backup_dir"])}</code></p><p>Radici di montaggio:</p><ul>{roots}</ul></div>'
+        body = self._header() + f'<div class="card {state_class}"><h2>Stato sistema</h2><div class="row"><span>Database</span><strong>{"OK" if data["database_ok"] else "ERRORE"}</strong></div><div class="row"><span>Servizio</span><strong>{esc(data["service"])}</strong></div><div class="row"><span>Backup disponibili</span><strong>{esc(data["backup_count"])}</strong></div>{error}</div><div class="card"><h2>Configurazione attiva</h2><p>Database: <code>{esc(data["database"])}</code></p><p>Servizio rilevato: <code>{esc(data["service_name"])}</code></p><p>Modalità: <code>{"Container ZimaOS" if data["container_mode"] else "Installazione nativa"}</code></p><p>Namespace host: <code>{"attivo" if data["host_namespace"] else "non attivo"}</code></p><p>Cartella backup: <code>{esc(data["backup_dir"])}</code></p><p>Radici di montaggio:</p><ul>{roots}</ul></div>'
         self._send(page("Diagnostica", body))
 
     def _history_page(self) -> None:

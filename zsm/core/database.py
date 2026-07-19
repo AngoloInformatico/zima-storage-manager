@@ -67,20 +67,6 @@ class StorageDatabase:
             con.commit()
             return cursor.rowcount
 
-    def delete_by_uuid(self, uuid: str) -> int:
-        self.validate()
-        with sqlite3.connect(self.path, timeout=30) as con:
-            con.execute("PRAGMA busy_timeout=30000")
-            con.execute("BEGIN IMMEDIATE")
-            cursor = con.execute(
-                "DELETE FROM o_disk WHERE lower(uuid)=lower(?)", (uuid,)
-            )
-            if cursor.rowcount != 1:
-                con.rollback()
-                raise RuntimeError(f"Era atteso un solo record per UUID {uuid}; eliminati: {cursor.rowcount}")
-            con.commit()
-            return cursor.rowcount
-
     def backup(self, directory: Path) -> Path:
         self.validate()
         directory.mkdir(parents=True, exist_ok=True)

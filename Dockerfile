@@ -9,13 +9,13 @@ RUN python -m pip install --upgrade pip \
 FROM python:3.12-slim
 
 LABEL org.opencontainers.image.title="Zima Storage Manager" \
-      org.opencontainers.image.description="Web UI for safely renaming filesystem labels and ZimaOS storage records" \
+      org.opencontainers.image.description="Web UI for safely renaming ZimaOS disk mount records" \
       org.opencontainers.image.source="https://github.com/AngoloInformatico/zima-storage-manager" \
       org.opencontainers.image.licenses="BSD-3-Clause" \
-      org.opencontainers.image.version="3.0.0-rc6"
+      org.opencontainers.image.version="3.0.0-rc7"
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends util-linux ntfs-3g exfatprogs dosfstools e2fsprogs btrfs-progs xfsprogs \
+    && apt-get install -y --no-install-recommends util-linux \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /wheels /wheels

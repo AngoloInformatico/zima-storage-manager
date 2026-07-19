@@ -26,28 +26,28 @@ def manager(tmp_path: Path, dry_run: bool = True) -> StorageManager:
         log_dir=tmp_path / "logs",
         service_name="missing.service",
     )
-    return StorageManager(cfg, dry_run=dry_run)
+    instance = StorageManager(cfg, dry_run=dry_run)
 
+    def fake_enrich(records, live_only=False):
+        for record in records:
+            record.label = Path(record.mount_point).name
+            record.device = "/dev/sdz1"
+            record.fs_type = "ntfs"
+            record.active_mounts = (record.mount_point,)
+        return records
 
-def _mock_live(instance):
-    from zsm.models import DiskRecord
-    instance.system.get_live_disk = lambda record: DiskRecord(
-        uuid=record.uuid, mount_point=record.mount_point, db_id=record.db_id,
-        label="NAS2", device="/dev/sdz1", fs_type="ntfs", size="1T",
-        active_mounts=(record.mount_point,),
-    )
-    instance.system.assert_rename_safe = lambda disk: None
+    instance.system.enrich = fake_enrich
     return instance
 
 
 def test_rename_preserves_existing_mount_root(tmp_path):
-    result = _mock_live(manager(tmp_path)).rename("abc", "NAS3")
+    result = manager(tmp_path).rename("abc", "NAS3")
     assert result["new"] == "/DATA/.media/NAS3"
 
 
 def test_rename_rejects_same_name(tmp_path):
     with pytest.raises(ValueError, match="coincide"):
-        _mock_live(manager(tmp_path)).rename("ABC", "NAS2")
+        manager(tmp_path).rename("ABC", "NAS2")
 
 
 def test_restore_rejects_file_outside_backup_directory(tmp_path):

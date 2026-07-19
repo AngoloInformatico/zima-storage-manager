@@ -1,18 +1,27 @@
 # Changelog
 
-## v3.0.0-rc6 - 2026-07-19
+## 3.0.0-rc7
 
-- la schermata principale mostra soltanto UUID realmente presenti in `lsblk`;
-- i record obsoleti del database non vengono più mostrati come dispositivi;
-- la rinomina modifica realmente la LABEL del filesystem;
-- supporto LABEL per NTFS, exFAT, FAT/VFAT, EXT2/3/4, BTRFS e XFS;
-- aggiornamento coordinato di LABEL, record `o_disk` e punto di montaggio;
-- smontaggio, rimontaggio, verifica finale e rollback automatico;
-- blocco dei filesystem non supportati e dei mount di sistema protetti;
-- diagnostica con conteggio dei record obsoleti esclusi;
-- immagine Docker aggiornata con gli strumenti filesystem necessari.
+- Consente rinomine ripetute anche quando il volume USB è già montato.
+- Arresta Local Storage, smonta in modo controllato tutti i mount del volume e segnala i processi che lo tengono occupato.
+- Modifica realmente la LABEL del filesystem, aggiorna `o_disk` e attende il rimontaggio sul nuovo percorso.
+- Esegue `udevadm settle` e verifica LABEL e mountpoint prima di dichiarare successo.
+- Rimuove le cartelle vuote associate al vecchio nome e nasconde i record database non più presenti.
+- Rollback di database e LABEL in caso di errore.
 
-## v3.0.0-rc5 - 2026-07-19
+## v3.0.0-rc7
+
+- introdotto il file unico `VERSION`;
+- aggiunto controllo automatico di coerenza della versione;
+- aggiunto installer/updater ZimaOS a un solo comando;
+- migrazione automatica di backup, report e log dai container precedenti;
+- aggiunto rollback automatico durante l'aggiornamento;
+- verifiche automatiche di healthcheck, versione e mount persistenti;
+- Compose completo con metadati ZimaOS per i volumi persistenti;
+- README completo con anteprima dashboard;
+- pipeline limitata al ramo `main`.
+
+## v3.0.0-rc7 - 2026-07-19
 
 - Resi persistenti i backup tramite `/DATA/AppData/zima-storage-manager/backups`.
 - Resi persistenti i report tramite `/DATA/AppData/zima-storage-manager/reports`.
