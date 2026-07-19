@@ -1,20 +1,26 @@
-AGGIORNAMENTO ALLA VERSIONE 2.0.0
+ZIMA STORAGE MANAGER 2.1.0 - RELEASE CANDIDATE
 
-1. Estrai questo ZIP.
-2. Copia tutti i file estratti dentro:
-   C:\Progetti\zima-storage-manager
-3. Conferma la sostituzione dei file.
-4. Apri PowerShell nella cartella del progetto.
-5. Esegui:
+1. Conserva una copia della cartella attuale del progetto.
+2. Copia il contenuto di questo pacchetto nella cartella locale del repository.
+3. Controlla le modifiche:
 
-git add .
-git commit -m "Release Zima Storage Manager 2.0"
-git push
+   git status
+   git diff
 
-Dopo il push, installa o aggiorna ZSM sul server.
+4. Pubblica:
 
-Nuova installazione:
-curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/install.sh | sudo bash
+   git add .
+   git commit -m "Release Zima Storage Manager v2.1.0"
+   git push
 
-Aggiornamento di un'installazione v2:
-sudo zsm-update
+5. Sul server ZimaOS esegui l'installazione nativa consigliata:
+
+   curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/install.sh | sudo bash
+
+6. Prima della prima rinomina verifica:
+
+   sudo zsm status
+   sudo zsm disks
+   sudo zsm audit
+
+È incluso anche un pacchetto Docker sperimentale. Leggi docs/DOCKER.md prima di usarlo.

@@ -1,0 +1,24 @@
+services:
+  zima-storage-manager:
+    build: .
+    container_name: zima-storage-manager
+    restart: unless-stopped
+    privileged: true
+    pid: host
+    ports:
+      - "8765:8765"
+    environment:
+      ZSM_PASSWORD: "CAMBIA_QUESTO_CODICE"
+      ZSM_HOST_NAMESPACE: "1"
+    volumes:
+      - /var/lib/casaos/db:/var/lib/casaos/db
+      - /media:/media
+      - /DATA/.media:/DATA/.media
+      - /var/lib/casaos_data/.media:/var/lib/casaos_data/.media
+      - ./config.example.json:/etc/zsm/config.json:ro
+      - zsm-data:/var/lib/zsm
+      - zsm-logs:/var/log/zsm
+
+volumes:
+  zsm-data:
+  zsm-logs:

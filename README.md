@@ -80,3 +80,20 @@ Backup e configurazione non vengono cancellati automaticamente.
 ## Nota importante
 
 Il progetto interviene sul database di archiviazione di ZimaOS. Usalo solo dopo aver verificato che il percorso configurato in `/etc/zsm/config.json` corrisponda alla tua versione di ZimaOS.
+
+## Pacchetto Docker sperimentale
+
+È incluso anche un `Dockerfile` con `docker-compose.yml`. Tuttavia ZSM deve modificare il database dell'host e controllare un servizio systemd dell'host; per questo il contenitore richiede privilegi elevati, `pid: host` e bind mount delle directory ZimaOS.
+
+La modalità Docker è quindi disponibile per test e futura integrazione nello store, ma **l'installazione nativa tramite systemd resta quella consigliata**.
+
+Istruzioni complete: [`docs/DOCKER.md`](docs/DOCKER.md).
+
+## Verifiche eseguite sulla release 2.1.0
+
+- compilazione dei moduli Python;
+- installazione del pacchetto in ambiente virtuale pulito;
+- suite automatica: 9 test superati;
+- verifica dei file Docker e Compose a livello statico.
+
+Il test finale sul server ZimaOS reale è comunque necessario, perché versioni diverse di ZimaOS possono usare percorsi del database o nomi del servizio differenti.

@@ -1,47 +1,100 @@
 from __future__ import annotations
-import json, os, re
+
+import json
+import os
+import re
 from pathlib import Path
+
 from .runner import CommandRunner
 from ..models import DiskRecord
 
-SAFE_NAME=re.compile(r"^[A-Za-z0-9][A-Za-z0-9._ -]{0,63}$")
+SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._ -]{0,63}$")
+
 
 def validate_name(name: str) -> str:
-    name=name.strip()
-    if not SAFE_NAME.fullmatch(name) or name in {".",".."}: raise ValueError("Name must be 1-64 characters: letters, digits, spaces, dot, underscore or hyphen")
+    name = name.strip()
+    if not SAFE_NAME.fullmatch(name) or name in {".", ".."}:
+        raise ValueError(
+            "Il nome deve contenere da 1 a 64 caratteri: lettere, numeri, spazi, punto, trattino o trattino basso"
+        )
     return name
 
+
 def require_root() -> None:
-    if os.geteuid()!=0: raise PermissionError("This operation requires root privileges. Run with sudo.")
+    if os.geteuid() != 0:
+        raise PermissionError("Questa operazione richiede privilegi root")
+
 
 class SystemInspector:
-    def __init__(self, runner: CommandRunner | None=None): self.runner=runner or CommandRunner()
+    def __init__(self, runner: CommandRunner | None = None):
+        self.runner = runner or CommandRunner()
+        self.host_namespace = os.getenv("ZSM_HOST_NAMESPACE", "0") == "1"
+
+    def _run(self, args: list[str]):
+        if self.host_namespace:
+            args = ["nsenter", "-t", "1", "-m", "-p", "--", *args]
+        return self.runner.run(args)
+
     def lsblk(self) -> list[dict]:
-        r=self.runner.run(["lsblk","-J","-o","NAME,PATH,TYPE,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINTS"])
-        if r.returncode: return []
-        def flat(nodes):
-            out=[]
-            for n in nodes: out.append(n); out += flat(n.get("children",[]))
-            return out
-        return flat(json.loads(r.stdout).get("blockdevices",[]))
-    def active_mounts(self) -> dict[str,list[str]]:
-        r=self.runner.run(["findmnt","-J","-o","SOURCE,TARGET,UUID"])
-        if r.returncode: return {}
-        result={}
+        result = self._run(["lsblk", "-J", "-o", "NAME,PATH,TYPE,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINTS"])
+        if result.returncode:
+            return []
+
+        def flatten(nodes):
+            output = []
+            for node in nodes:
+                output.append(node)
+                output += flatten(node.get("children", []))
+            return output
+
+        try:
+            return flatten(json.loads(result.stdout).get("blockdevices", []))
+        except (json.JSONDecodeError, TypeError):
+            return []
+
+    def active_mounts(self) -> dict[str, list[str]]:
+        result = self._run(["findmnt", "-J", "-o", "SOURCE,TARGET,UUID"])
+        if result.returncode:
+            return {}
+        mounts: dict[str, list[str]] = {}
+
         def walk(nodes):
-            for n in nodes:
-                uuid=n.get("uuid") or ""; target=n.get("target") or ""
-                if uuid and target: result.setdefault(uuid.lower(),[]).append(target)
-                walk(n.get("children",[]))
-        walk(json.loads(r.stdout).get("filesystems",[])); return result
+            for node in nodes:
+                uuid = node.get("uuid") or ""
+                target = node.get("target") or ""
+                if uuid and target:
+                    mounts.setdefault(uuid.casefold(), []).append(target)
+                walk(node.get("children", []))
+
+        try:
+            walk(json.loads(result.stdout).get("filesystems", []))
+        except (json.JSONDecodeError, TypeError):
+            return {}
+        return mounts
+
     def enrich(self, records: list[DiskRecord]) -> list[DiskRecord]:
-        blocks={str(x.get("uuid") or "").lower():x for x in self.lsblk() if x.get("uuid")}
-        mounts=self.active_mounts()
-        for r in records:
-            b=blocks.get(r.uuid.lower(),{}); r.label=b.get("label") or ""; r.device=b.get("path") or ""; r.fs_type=b.get("fstype") or ""; r.size=b.get("size") or ""; r.active_mounts=tuple(mounts.get(r.uuid.lower(),[]))
+        blocks = {
+            str(item.get("uuid") or "").casefold(): item
+            for item in self.lsblk()
+            if item.get("uuid")
+        }
+        mounts = self.active_mounts()
+        for record in records:
+            block = blocks.get(record.uuid.casefold(), {})
+            record.label = block.get("label") or ""
+            record.device = block.get("path") or ""
+            record.fs_type = block.get("fstype") or ""
+            record.size = block.get("size") or ""
+            record.active_mounts = tuple(mounts.get(record.uuid.casefold(), []))
         return records
+
     def service_state(self, service: str) -> str:
-        r=self.runner.run(["systemctl","is-active",service]); return r.stdout or ("unknown" if r.returncode==127 else "inactive")
+        result = self._run(["systemctl", "is-active", service])
+        return result.stdout or ("unknown" if result.returncode == 127 else "inactive")
+
     def service(self, action: str, service: str) -> None:
-        r=self.runner.run(["systemctl",action,service]);
-        if r.returncode: raise RuntimeError(r.stderr or f"Unable to {action} {service}")
+        if action not in {"start", "stop", "restart"}:
+            raise ValueError(f"Azione systemd non consentita: {action}")
+        result = self._run(["systemctl", action, service])
+        if result.returncode:
+            raise RuntimeError(result.stderr or f"Impossibile eseguire {action} su {service}")
