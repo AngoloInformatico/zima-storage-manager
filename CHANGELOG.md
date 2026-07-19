@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.0.0-rc4 - 2026-07-19
+
+- Resi persistenti i backup tramite `/DATA/AppData/zima-storage-manager/backups`.
+- Resi persistenti i report tramite `/DATA/AppData/zima-storage-manager/reports`.
+- Resi persistenti log e cronologia tramite `/DATA/AppData/zima-storage-manager/logs`.
+- Aggiornato il Compose per l'importazione nell'App Store di ZimaOS.
+- Aggiornato il riferimento dell'icona al ramo principale `main`.
+
+
 ## 3.0.0-rc3
 
 - aggiunta installazione come app personalizzata ZimaOS tramite Docker Compose e metadati `x-casaos`;

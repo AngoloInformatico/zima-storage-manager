@@ -2,7 +2,7 @@ name: zima-storage-manager
 
 services:
   zima-storage-manager:
-    image: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc3
+    image: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc4
     container_name: zima-storage-manager
     hostname: zima-storage-manager
     restart: unless-stopped
@@ -48,8 +48,11 @@ services:
         source: /run/dbus/system_bus_socket
         target: /run/dbus/system_bus_socket
       - type: bind
-        source: /DATA/AppData/zima-storage-manager/data
-        target: /var/lib/zsm
+        source: /DATA/AppData/zima-storage-manager/backups
+        target: /var/lib/zsm/backups
+      - type: bind
+        source: /DATA/AppData/zima-storage-manager/reports
+        target: /var/lib/zsm/reports
       - type: bind
         source: /DATA/AppData/zima-storage-manager/logs
         target: /var/log/zsm
@@ -68,7 +71,7 @@ x-casaos:
   author: Alex Lignola
   category: Utilities
   developer: Angolo Informatico
-  icon: https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/develop-v3/assets/icon.png
+  icon: https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/assets/icon.png
   index: /
   port_map: "8787"
   scheme: http

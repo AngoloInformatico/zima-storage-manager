@@ -3,7 +3,7 @@
 ## Immagine
 
 - Immagine Docker: `ghcr.io/angoloinformatico/zima-storage-manager`
-- Tag: `v3.0.0-rc3`
+- Tag: `v3.0.0-rc4`
 - Titolo: `Zima Storage Manager`
 - Web UI: `http://IP_ZIMAOS:8787/`
 - Rete: `bridge`

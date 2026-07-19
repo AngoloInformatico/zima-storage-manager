@@ -1,45 +1,121 @@
 # Zima Storage Manager
 
-Interfaccia web per gestire in modo sicuro i nomi dei dischi e i punti di montaggio utilizzati da ZimaOS.
+Una semplice interfaccia web per cambiare il **nome del punto di montaggio usato da ZimaOS**.
 
-![Versione](https://img.shields.io/badge/version-v3.0.0--rc3-blue)
-![ZimaOS](https://img.shields.io/badge/ZimaOS-1.6.2-blue)
-![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-blue)
-![License](https://img.shields.io/badge/license-BSD--3--Clause-green)
+> ZSM non cambia l'etichetta interna BTRFS/EXT4 del filesystem. Cambia il nome con cui ZimaOS registra e monta il disco, per esempio da `NAS2` a `NAS3`.
 
-## Anteprima
+## Installazione con un solo comando
 
-![Zima Storage Manager su ZimaOS](img/zima-storage-manager-dashboard.png)
+Apri il terminale SSH di ZimaOS e incolla:
 
-> Zima Storage Manager non modifica necessariamente l'etichetta interna del filesystem.  
-> Modifica il nome con cui ZimaOS registra e monta il disco, mantenendo il percorso coerente nel database Local Storage.
+```bash
+curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/install.sh | sudo bash
+```
 
-## Funzioni principali
+Se `curl` non è disponibile:
 
-- rilevamento automatico dei dischi registrati in ZimaOS;
-- rinomina dei dischi e dei relativi punti di montaggio;
-- mantenimento e aggiornamento dei percorsi nel database;
-- backup automatico prima di ogni modifica;
-- creazione di backup manuali;
-- ripristino del database;
-- verifica dell'integrità SQLite;
-- cronologia delle operazioni;
-- autenticazione web;
-- protezione CSRF;
-- conferma delle operazioni critiche;
-- pagina di diagnostica;
-- rilevamento automatico del servizio Local Storage;
-- supporto installazione nativa con systemd;
-- supporto Docker e ZimaOS App Store;
-- immagini container per `amd64` e `arm64`;
-- aggiornamenti automatici tramite GitHub Actions.
+```bash
+wget -qO- https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/install.sh | sudo bash
+```
 
-## Compatibilità verificata
+Alla fine dell'installazione compariranno l'indirizzo dell'app e il codice di accesso.
 
-La release candidate `v3.0.0-rc3` è stata provata su:
+## Utilizzo
 
-```text
-ZimaOS 1.6.2
-Database: /var/lib/casaos/db/local-storage.db
-Servizio: zimaos-local-storage.service
-Architettura: amd64
+1. Apri dal browser l'indirizzo mostrato dall'installer.
+2. Inserisci il codice di accesso.
+3. Scegli il disco dalla schermata.
+4. Premi **Cambia nome**.
+5. Scrivi il nuovo nome.
+6. Conferma.
+
+Non è necessario conoscere UUID, SQLite, Python o comandi Linux.
+
+## Sicurezza
+
+Prima di ogni modifica ZSM:
+
+- crea una copia di sicurezza del database;
+- ferma temporaneamente il servizio di archiviazione;
+- verifica la modifica;
+- ripristina il database in caso di errore.
+
+Il servizio è protetto da un codice di accesso generato durante l'installazione. Non esporre la porta `8787` direttamente su Internet.
+
+Per rivedere il codice:
+
+```bash
+sudo grep ZSM_PASSWORD /etc/zsm/zsm.env
+```
+
+## Aggiornamento
+
+```bash
+sudo zsm-update
+```
+
+## Stato del servizio
+
+```bash
+sudo systemctl status zima-storage-manager
+```
+
+## Disinstallazione
+
+Dal repository:
+
+```bash
+sudo bash uninstall.sh
+```
+
+Backup e configurazione non vengono cancellati automaticamente.
+
+## Requisiti
+
+- ZimaOS con `systemd`
+- Python 3.10 o successivo
+- modulo `python3-venv`
+- `curl` oppure `wget`
+
+## Nota importante
+
+Il progetto interviene sul database di archiviazione di ZimaOS. Usalo solo dopo aver verificato che il percorso configurato in `/etc/zsm/config.json` corrisponda alla tua versione di ZimaOS.
+
+## Pacchetto Docker sperimentale
+
+È incluso anche un `Dockerfile` con `docker-compose.yml`. Tuttavia ZSM deve modificare il database dell'host e controllare un servizio systemd dell'host; per questo il contenitore richiede privilegi elevati, `pid: host` e bind mount delle directory ZimaOS.
+
+La modalità Docker è quindi disponibile per test e futura integrazione nello store, ma **l'installazione nativa tramite systemd resta quella consigliata**.
+
+Istruzioni complete: [`docs/DOCKER.md`](docs/DOCKER.md).
+
+## Verifiche della release candidate 3.0.0-rc4
+
+- compilazione dei moduli Python;
+- installazione del pacchetto in ambiente virtuale pulito;
+- suite automatica: 18 test superati;
+- verifica dei file Docker e Compose a livello statico.
+
+Il test finale sul server ZimaOS reale è comunque necessario, perché versioni diverse di ZimaOS possono usare percorsi del database o nomi del servizio differenti.
+
+## Dati persistenti del container
+
+La configurazione RC4 conserva i dati anche quando il container viene ricreato:
+
+- backup: `/DATA/AppData/zima-storage-manager/backups`;
+- report: `/DATA/AppData/zima-storage-manager/reports`;
+- log e cronologia: `/DATA/AppData/zima-storage-manager/logs`.
+
+## Docker e GitHub Container Registry
+
+Le immagini dei tag di release vengono pubblicate automaticamente per `linux/amd64` e `linux/arm64` su GitHub Container Registry. La configurazione completa è descritta in `docs/DOCKER.md`.
+
+
+## Funzioni Web v3 RC1
+
+La Web UI include gestione dischi, backup manuali, ripristino con doppia conferma, cronologia e pagina diagnostica. Tutte le azioni di scrittura richiedono autenticazione, token CSRF e una conferma monouso con scadenza. I backup più vecchi vengono rimossi automaticamente secondo `backup_retention` (25 per impostazione predefinita).
+
+
+## Installazione come app ZimaOS
+
+La release RC4 include un `docker-compose.yml` con metadati `x-casaos`, supporto amd64/arm64, persistenza dei backup e rilevamento automatico del servizio Local Storage. Consulta [docs/ZIMAOS_APPSTORE.md](docs/ZIMAOS_APPSTORE.md).
