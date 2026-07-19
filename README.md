@@ -7,6 +7,12 @@
 
 Zima Storage Manager è un piccolo pannello web per rinominare in sicurezza i dischi collegati a ZimaOS.
 
+L'Idea Nasce, dalla mancanza della funzione di Rinomina dei Dischi collegati al Server con ZimaOs installato,
+Quando si collegano HD , SSD , dischi USB ecc. viene assegnata l'etichetta iniziale,
+da quel momento non c'è un modo semplice per rinominare le etichette dei vari dischi,
+ecco che interviene Zima Storage Manager in modo semplice rinomina i dischi collegati.
+
+
 Il tool aggiorna l'etichetta reale del filesystem, il database Local Storage e il punto di montaggio. Prima delle operazioni importanti crea un backup e, in caso di errore, prova a ripristinare la situazione precedente.
 
 ## Anteprima
