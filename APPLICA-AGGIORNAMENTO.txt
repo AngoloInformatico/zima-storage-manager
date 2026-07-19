@@ -1,0 +1,18 @@
+COME APPLICARE L'AGGIORNAMENTO
+
+1. Estrai questo ZIP.
+2. Copia tutti i file estratti dentro:
+   C:\Progetti\zima-storage-manager
+3. Conferma la sostituzione dei file esistenti.
+4. Apri PowerShell nella cartella del progetto.
+5. Esegui:
+
+git add .
+git commit -m "Add simple web interface and guided installer"
+git push
+
+Dopo il push, su ZimaOS installa con:
+
+git clone https://github.com/AngoloInformatico/zima-storage-manager.git
+cd zima-storage-manager
+sudo bash install.sh

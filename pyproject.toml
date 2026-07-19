@@ -4,27 +4,29 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zima-storage-manager"
-version = "1.0.0"
-description = "GUI and CLI administration toolkit for ZimaOS storage metadata, backups and diagnostics."
+version = "1.1.0"
+description = "Simple web tool for renaming ZimaOS disk mount labels safely."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{name = "Alex Lignola"}]
-dependencies = ["customtkinter>=5.2.2"]
+dependencies = []
 keywords = ["zimaos", "storage", "sqlite", "disk", "administration"]
 classifiers = [
   "Development Status :: 4 - Beta",
+  "Environment :: Web Environment",
   "Environment :: Console",
-  "Environment :: X11 Applications",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
 ]
 
 [project.optional-dependencies]
+gui = ["customtkinter>=5.2.2"]
 dev = ["pytest>=8", "ruff>=0.5"]
 
 [project.scripts]
 zsm = "zsm.cli:main"
+zsm-web = "zsm.web:main"
 zsm-gui = "zsm.gui.app:main"
 
 [tool.setuptools.packages.find]

@@ -1,75 +1,68 @@
-# Zima Storage Manager (ZSM)
+# Zima Storage Manager
 
-ZSM is a defensive administration toolkit for inspecting and repairing ZimaOS local-storage metadata. It provides a modern CustomTkinter GUI and an SSH-friendly CLI.
+Zima Storage Manager permette di rinominare in modo semplice il punto di montaggio di un disco su ZimaOS.
 
-> **Important:** ZSM is an independent community project. It is not affiliated with or endorsed by IceWhale Technology. Always maintain independent backups of important data.
+Non serve conoscere Python, SQLite o i comandi interni di ZimaOS. Dopo l'installazione si usa dal browser.
 
-## Features
+## Installazione semplice
 
-- Modern dark/light GUI with uniform navigation buttons and hover effects.
-- Disk inventory from `lsblk`, database records and active mounts.
-- Safe mount-point rename workflow with validation, automatic snapshot and rollback.
-- Audit of database, service, mount directories, duplicate mount points and UUID coherence.
-- Database backup, listing and restore.
-- Diagnostic reports in HTML, Markdown and JSON.
-- Operation timeline and rotating logs.
-- CLI and GUI `dry-run` mode.
-- Configurable paths and service name.
-
-## Supported baseline
-
-The defaults target the ZimaOS/CasaOS local-storage layout observed on ZimaOS 1.6.x:
-
-- Database: `/var/lib/casaos/db/local-storage.db`
-- Service: `zimaos-local-storage.service`
-- Mount root: `/media`
-
-All values can be overridden in `/etc/zsm/config.json` or `~/.config/zsm/config.json`.
-
-## Quick installation
+Apri il terminale SSH di ZimaOS e incolla:
 
 ```bash
-chmod +x install.sh
-sudo ./install.sh
+git clone https://github.com/AngoloInformatico/zima-storage-manager.git
+cd zima-storage-manager
+sudo bash install.sh
 ```
 
-Launch:
+Al termine verranno mostrati:
+
+- l'indirizzo da aprire nel browser, normalmente `http://IP_ZIMAOS:8765`;
+- un codice di accesso personale.
+
+## Utilizzo
+
+1. Apri l'indirizzo mostrato dall'installer.
+2. Seleziona il disco dall'elenco.
+3. Scrivi il nuovo nome, per esempio `NAS3`.
+4. Inserisci il codice di accesso.
+5. Premi **Rinomina disco**.
+6. Riavvia ZimaOS o scollega e ricollega il disco se il nuovo nome non appare subito.
+
+ZSM crea automaticamente un backup del database prima di ogni modifica. Non formatta il disco e non cancella i file.
+
+## Aggiornamento
 
 ```bash
-zsm-gui
-# or
-zsm status
-zsm audit
+cd zima-storage-manager
+git pull
+sudo bash install.sh
 ```
 
-For a desktop GUI displayed remotely, an X11/Wayland session is required. SSH-only servers can use the CLI.
-
-## Safe rename example
+## Disinstallazione
 
 ```bash
-sudo zsm rename --uuid 5ECC3C1BCC3BEC41 --name NAS3 --dry-run
-sudo zsm rename --uuid 5ECC3C1BCC3BEC41 --name NAS3
+cd zima-storage-manager
+sudo bash uninstall.sh
 ```
 
-ZSM changes only the local-storage database mount-point record. It does **not** rename the filesystem label. The service is stopped before the transaction and restarted afterward. A snapshot is always created before a real change.
+Backup e configurazione vengono conservati.
 
-## Repository layout
+## Sicurezza
 
-- `zsm/`: application source
-- `tests/`: automated tests
-- `docs/`: installation, usage, architecture and troubleshooting
-- `.github/workflows/`: CI validation
+Il servizio gira come root perché deve modificare il database di sistema di ZimaOS. È protetto da un codice generato durante l'installazione. Non esporre la porta `8765` direttamente su Internet.
 
-## Development
+Per visualizzare nuovamente il codice:
 
 ```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -e '.[dev]'
-pytest
-ruff check .
+sudo cat /etc/zsm/zsm.env
 ```
 
-## License
+## Compatibilità
 
-MIT. See [LICENSE](LICENSE).
+Il progetto è stato progettato per ZimaOS e usa il database:
+
+```text
+/var/lib/casaos/db/local-storage.db
+```
+
+Prima di usarlo su versioni nuove di ZimaOS, verifica sempre che il database esista.
