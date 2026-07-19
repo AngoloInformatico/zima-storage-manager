@@ -1,54 +1,65 @@
-# Installazione dall'App Store di ZimaOS
+# Installazione manuale in ZimaOS App Store
 
-Questa modalità usa l'importazione di un'app personalizzata basata su Docker Compose.
+## Immagine
 
-## Requisiti
+- Immagine Docker: `ghcr.io/angoloinformatico/zima-storage-manager`
+- Tag: `v3.0.0-rc3`
+- Titolo: `Zima Storage Manager`
+- Web UI: `http://IP_ZIMAOS:8787/`
+- Rete: `bridge`
+- Modalità privilegiata: attiva
+- PID namespace: `host`
+- Politica di riavvio: `unless-stopped`
 
-- ZimaOS 1.6.2 o successivo
-- architettura amd64 oppure arm64
-- immagine pubblicata su GHCR con lo stesso tag indicato nel Compose
+## Porta
 
-## Procedura
+- Host: `8787`
+- Container: `8787`
+- Protocollo: TCP
 
-1. Apri **App Store** in ZimaOS.
-2. Premi **+** e scegli l'installazione di un'app personalizzata.
-3. Importa il contenuto di `docker-compose.yml`.
-4. Imposta una password sicura in `ZSM_PASSWORD`.
-5. Conferma la porta `8765` e avvia l'app.
-6. Apri `http://IP-DELLO-ZIMAOS:8765`.
+## Variabili d'ambiente
 
-## Permessi
+| Nome | Valore |
+|---|---|
+| `ZSM_HOST` | `0.0.0.0` |
+| `ZSM_PORT` | `8787` |
+| `ZSM_CONTAINER_MODE` | `true` |
+| `ZSM_HOST_NAMESPACE` | `1` |
+| `ZSM_SERVICE_NAME` | `auto` |
+| `ZSM_DATABASE_PATH` | `/var/lib/casaos/db/local-storage.db` |
+| `ZSM_BACKUP_DIR` | `/var/lib/zsm/backups` |
+| `ZSM_REPORT_DIR` | `/var/lib/zsm/reports` |
+| `ZSM_LOG_DIR` | `/var/log/zsm` |
+| `TZ` | `Europe/Rome` |
 
-La RC2 usa un container privilegiato con `pid: host` perché deve:
+Inserire soltanto il valore, senza prefissi come `Valore:` e senza spazi iniziali.
 
-- interrogare i dispositivi a blocchi reali;
-- accedere al database Local Storage;
-- arrestare e riavviare il servizio storage dell'host;
-- verificare i mount esposti da ZimaOS.
+## Volumi
 
-Questi permessi sono elevati. Installare solo l'immagine ufficiale del repository e non esporre la porta direttamente su Internet.
+| Host | Container | Modalità |
+|---|---|---|
+| `/var/lib/casaos` | `/var/lib/casaos` | lettura/scrittura |
+| `/media` | `/media` | lettura/scrittura |
+| `/DATA/.media` | `/DATA/.media` | lettura/scrittura |
+| `/var/lib/casaos_data` | `/var/lib/casaos_data` | lettura/scrittura |
+| `/dev` | `/dev` | lettura/scrittura |
+| `/run/udev` | `/run/udev` | sola lettura |
+| `/run/dbus/system_bus_socket` | `/run/dbus/system_bus_socket` | lettura/scrittura |
+| `/DATA/AppData/zima-storage-manager/data` | `/var/lib/zsm` | lettura/scrittura |
+| `/DATA/AppData/zima-storage-manager/logs` | `/var/log/zsm` | lettura/scrittura |
 
-## Percorsi host montati
+Prima dell'installazione si possono creare le directory persistenti da SSH:
 
-- `/var/lib/casaos/db`
-- `/media`
-- `/DATA/.media`
-- `/var/lib/casaos_data/.media`
-- `/dev`
-- `/run/udev` in sola lettura
+```bash
+sudo mkdir -p /DATA/AppData/zima-storage-manager/{data,logs}
+```
 
-Backup, report e cronologia sono persistenti nei volumi Docker `zsm-data` e `zsm-logs`.
+## Controlli
 
-## Servizio Local Storage
+```bash
+sudo docker ps --filter name=zima-storage-manager
+sudo docker logs --tail=100 zima-storage-manager
+curl -i http://127.0.0.1:8787/health
+```
 
-Con `ZSM_SERVICE_NAME=auto`, ZSM prova in ordine:
-
-1. `zimaos-local-storage.service`
-2. `casaos-local-storage.service`
-3. `local-storage.service`
-
-Il servizio effettivamente rilevato viene mostrato nella pagina **Diagnostica**.
-
-## Aggiornamento
-
-Aggiornare il tag dell'immagine nel Compose, quindi ricreare il container. I volumi persistenti non vengono eliminati.
+Lo stato deve passare da `health: starting` a `healthy`.

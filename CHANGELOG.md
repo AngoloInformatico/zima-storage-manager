@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.0-rc2
+## 3.0.0-rc3
 
 - aggiunta installazione come app personalizzata ZimaOS tramite Docker Compose e metadati `x-casaos`;
 - aggiunto rilevamento automatico del servizio Local Storage;

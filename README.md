@@ -40,7 +40,7 @@ Prima di ogni modifica ZSM:
 - verifica la modifica;
 - ripristina il database in caso di errore.
 
-Il servizio è protetto da un codice di accesso generato durante l'installazione. Non esporre la porta `8765` direttamente su Internet.
+Il servizio è protetto da un codice di accesso generato durante l'installazione. Non esporre la porta `8787` direttamente su Internet.
 
 Per rivedere il codice:
 
@@ -89,7 +89,7 @@ La modalità Docker è quindi disponibile per test e futura integrazione nello s
 
 Istruzioni complete: [`docs/DOCKER.md`](docs/DOCKER.md).
 
-## Verifiche della release candidate 3.0.0-rc2
+## Verifiche della release candidate 3.0.0-rc3
 
 - compilazione dei moduli Python;
 - installazione del pacchetto in ambiente virtuale pulito;

@@ -254,7 +254,7 @@ class AppHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    host = os.environ.get("ZSM_HOST", "0.0.0.0"); port = int(os.environ.get("ZSM_PORT", "8765"))
+    host = os.environ.get("ZSM_HOST", "0.0.0.0"); port = int(os.environ.get("ZSM_PORT", "8787"))
     server = ThreadingHTTPServer((host, port), AppHandler)
     print(f"Zima Storage Manager v{APP_VERSION} attivo su http://{host}:{port}", flush=True)
     server.serve_forever()

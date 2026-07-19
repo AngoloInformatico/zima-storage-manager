@@ -11,7 +11,7 @@ ZIMA STORAGE MANAGER 3.0.0-RC1
 
    git checkout develop-v3
    git add .
-   git commit -m "Release candidate Zima Storage Manager v3.0.0-rc2"
+   git commit -m "Release candidate Zima Storage Manager v3.0.0-rc3"
    git push origin develop-v3
 
 TEST CONSIGLIATI PRIMA DELLA RINOMINA
