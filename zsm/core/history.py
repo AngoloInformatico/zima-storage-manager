@@ -18,3 +18,14 @@ def read_timeline(log_dir: Path, limit: int = 100) -> list[dict]:
         if isinstance(item, dict):
             rows.append(item)
     return rows[-max(1, limit):][::-1]
+
+
+def clear_timeline(log_dir: Path) -> bool:
+    """Remove the operation timeline safely. Returns True if a file existed."""
+    path = log_dir / "timeline.jsonl"
+    if not path.exists():
+        return False
+    if not path.is_file():
+        raise ValueError("Il percorso della cronologia non è un file regolare")
+    path.unlink()
+    return True

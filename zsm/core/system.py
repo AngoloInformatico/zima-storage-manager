@@ -203,18 +203,62 @@ class SystemInspector:
         if result.returncode:
             raise RuntimeError(result.stderr or result.stdout or "Rinomina etichetta non riuscita")
 
+
+    def read_filesystem_label(self, device: str) -> str:
+        """Read the label directly from the block device, bypassing stale lsblk caches."""
+        result = self._run(["blkid", "-p", "-s", "LABEL", "-o", "value", device], timeout=30)
+        if result.returncode not in {0, 2}:
+            raise RuntimeError(result.stderr or result.stdout or f"Impossibile leggere la LABEL di {device}")
+        return result.stdout.strip()
+
+    def refresh_block_metadata(self, device: str) -> None:
+        # Notifica udev del cambio LABEL e attende la conclusione degli eventi.
+        self._run(["udevadm", "trigger", "--action=change", device], timeout=30)
+        self.settle()
+
+    def mount_device(self, device: str, target: str) -> None:
+        """Mount a device explicitly and verify the real target with findmnt."""
+        target_path = Path(target)
+        target_path.mkdir(parents=True, exist_ok=True)
+        current = self.mounts_for_device(device)
+        if target in current:
+            return
+        if current:
+            raise RuntimeError(f"Il dispositivo {device} è già montato su: {', '.join(current)}")
+        result = self._run(["mount", device, target], timeout=120)
+        if result.returncode:
+            raise RuntimeError(result.stderr or result.stdout or f"Impossibile montare {device} su {target}")
+        current = self.mounts_for_device(device)
+        if target not in current:
+            raise RuntimeError(f"Mount non verificato: {device} non risulta montato su {target}")
+
+    def verify_final_state(self, uuid: str, device: str, label: str, target: str) -> dict:
+        direct_label = self.read_filesystem_label(device)
+        mounts = self.mounts_for_device(device)
+        if direct_label != label:
+            raise RuntimeError(f"LABEL finale non valida: attesa '{label}', rilevata '{direct_label}'")
+        if target not in mounts:
+            raise RuntimeError(f"Mount finale non valido: atteso {target}, rilevati: {', '.join(mounts) or 'nessuno'}")
+        block = self.block_by_uuid(uuid) or {}
+        return {"label": direct_label, "mounts": mounts, "lsblk_label": block.get("label") or ""}
+
     def settle(self) -> None:
         self._run(["udevadm", "settle"], timeout=30)
 
-    def wait_for_label(self, uuid: str, label: str, timeout: int = 30) -> dict:
+    def wait_for_label(self, uuid: str, label: str, timeout: int = 30, device: str | None = None) -> dict:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
+            direct = self.read_filesystem_label(device) if device else ""
             block = self.block_by_uuid(uuid)
-            if block and str(block.get("label") or "") == label:
-                return block
+            cached = str((block or {}).get("label") or "")
+            if (not device or direct == label) and (cached == label or direct == label):
+                return block or {"label": direct}
             time.sleep(1)
+        direct = self.read_filesystem_label(device) if device else ""
         block = self.block_by_uuid(uuid) or {}
-        raise RuntimeError(f"Verifica LABEL fallita: attesa '{label}', rilevata '{block.get('label') or ''}'")
+        raise RuntimeError(
+            f"Verifica LABEL fallita: attesa '{label}', dispositivo '{direct}', lsblk '{block.get('label') or ''}'"
+        )
 
     def wait_for_mount(self, uuid: str, target: str, timeout: int = 35) -> None:
         deadline = time.monotonic() + timeout

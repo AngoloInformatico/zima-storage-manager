@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-VERSION="${ZSM_VERSION:-3.0.0-rc8}"
+VERSION="${ZSM_VERSION:-3.0.0-rc9}"
 export ZSM_VERSION="$VERSION"
 URL="https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/v${VERSION}/scripts/update-zimaos.sh"
 TMP="$(mktemp)"

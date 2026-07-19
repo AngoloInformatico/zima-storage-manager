@@ -1,12 +1,16 @@
 # Changelog
 
-## 3.0.0-rc8
+## 3.0.0-rc9
 
-- Usa `findmnt -S <device>` come unica fonte dei mount reali prima della rinomina.
-- Salta correttamente `umount` quando il dispositivo è già smontato.
-- Non passa più al comando `umount` i percorsi obsoleti memorizzati nel database.
-- Sostituisce `fuser -vm` con il più compatibile `fuser -m`.
-- Verifica nuovamente la tabella mount dopo ogni smontaggio e prima della modifica della LABEL.
+- Rinomina transazionale completa: LABEL, record `o_disk`, mount reale e verifica finale devono coincidere.
+- Rimonta esplicitamente il dispositivo sul nuovo percorso prima di riavviare Local Storage.
+- Legge la LABEL direttamente dal dispositivo con `blkid -p`, evitando cache obsolete di `lsblk`.
+- Notifica udev del cambio etichetta e attende la sincronizzazione del sistema.
+- Rollback completo di database, LABEL e mountpoint precedente in caso di errore.
+- Aggiunta eliminazione del singolo backup con conferma.
+- Aggiunta eliminazione di tutti i backup con conferma.
+- Aggiunto pulsante per svuotare completamente la cronologia con conferma.
+- Conservazione automatica limitata dal valore `ZSM_BACKUP_RETENTION`.
 
 ## 3.0.0-rc7
 

@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 REPO="AngoloInformatico/zima-storage-manager"
-VERSION="${ZSM_VERSION:-3.0.0-rc8}"
+VERSION="${ZSM_VERSION:-3.0.0-rc9}"
 TAG="v${VERSION}"
 APP_ID="zima-storage-manager"
 APP_DIR="/var/lib/casaos/apps/${APP_ID}"

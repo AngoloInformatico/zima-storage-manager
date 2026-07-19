@@ -71,3 +71,20 @@ def test_diagnostics_reports_valid_database(tmp_path):
     data = manager(tmp_path).diagnostics()
     assert data["database_ok"] is True
     assert data["backup_count"] == 0
+
+
+def test_delete_backup(tmp_path, monkeypatch):
+    instance = manager(tmp_path, dry_run=False)
+    monkeypatch.setattr("zsm.core.manager.require_root", lambda: None)
+    path = instance.create_backup()
+    instance.delete_backup(path.name)
+    assert not path.exists()
+
+
+def test_delete_all_backups(tmp_path, monkeypatch):
+    instance = manager(tmp_path, dry_run=False)
+    monkeypatch.setattr("zsm.core.manager.require_root", lambda: None)
+    instance.create_backup()
+    instance.create_backup()
+    assert instance.delete_all_backups() == 2
+    assert instance.backups() == []

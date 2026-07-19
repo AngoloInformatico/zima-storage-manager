@@ -36,7 +36,7 @@ def page(title: str, body: str) -> bytes:
 <meta name="robots" content="noindex,nofollow"><title>{esc(title)} · Zima Storage Manager</title>
 <style>
 :root{{color-scheme:dark;font-family:Inter,system-ui,sans-serif;--bg:#09111f;--panel:#111b2d;--panel2:#162238;--line:#2a3850;--text:#f4f7fb;--muted:#aab6c8;--blue:#3b82f6;--blue2:#2563eb;--green:#22c55e;--amber:#f59e0b;--red:#ef4444}}
-*{{box-sizing:border-box}}body{{margin:0;min-height:100vh;background:radial-gradient(circle at top,#152747 0,#09111f 44%);color:var(--text)}}main{{width:min(1020px,100%);margin:auto;padding:24px 18px 64px}}header{{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}}.brand{{display:flex;align-items:center;gap:14px}}.logo{{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#60a5fa,#2563eb);font-size:25px}}h1{{margin:0;font-size:clamp(1.45rem,4vw,2.05rem)}}h2{{margin:0 0 8px;font-size:1.15rem}}p{{color:var(--muted);line-height:1.55}}.version,.small{{color:var(--muted);font-size:.86rem}}nav{{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}}nav a{{padding:9px 12px;border-radius:10px;background:#152238;border:1px solid var(--line);color:#dce8f8;text-decoration:none;font-size:.9rem}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}}.card{{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 16px 35px #0004}}.disk-top{{display:flex;gap:14px;align-items:center}}.disk-icon{{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:#0c1628;border:1px solid var(--line);font-size:24px}}.disk-name{{font-size:1.18rem;font-weight:800;word-break:break-word}}.meta{{margin:14px 0 18px;display:flex;flex-wrap:wrap;gap:8px}}.badge{{background:#0c1628;border:1px solid var(--line);color:#c9d5e6;border-radius:999px;padding:6px 10px;font-size:.82rem}}button,.button{{display:inline-flex;justify-content:center;align-items:center;width:100%;border:0;border-radius:12px;padding:13px 16px;background:var(--blue);color:white;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}}button:hover,.button:hover{{background:var(--blue2)}}.secondary{{background:#25334a}}.danger{{background:#b91c1c}}input{{width:100%;margin-top:7px;padding:14px;border-radius:11px;border:1px solid #42516a;background:#0b1527;color:white;font:inherit}}label{{display:block;margin:16px 0 5px;font-weight:750}}.notice{{border-left:4px solid var(--amber)}}.success{{border-left:4px solid var(--green)}}.error{{border-left:4px solid var(--red)}}.actions{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}}.row{{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}}.row:last-child{{border-bottom:0}}.row form{{min-width:150px}}code{{color:#bfdbfe;word-break:break-all}}footer{{margin-top:25px;text-align:center;color:var(--muted);font-size:.83rem}}@media(max-width:600px){{header,.row{{align-items:flex-start;flex-direction:column}}.actions{{grid-template-columns:1fr}}.row form{{width:100%}}}}
+*{{box-sizing:border-box}}body{{margin:0;min-height:100vh;background:radial-gradient(circle at top,#152747 0,#09111f 44%);color:var(--text)}}main{{width:min(1020px,100%);margin:auto;padding:24px 18px 64px}}header{{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}}.brand{{display:flex;align-items:center;gap:14px}}.logo{{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#60a5fa,#2563eb);font-size:25px}}h1{{margin:0;font-size:clamp(1.45rem,4vw,2.05rem)}}h2{{margin:0 0 8px;font-size:1.15rem}}p{{color:var(--muted);line-height:1.55}}.version,.small{{color:var(--muted);font-size:.86rem}}nav{{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}}nav a{{padding:9px 12px;border-radius:10px;background:#152238;border:1px solid var(--line);color:#dce8f8;text-decoration:none;font-size:.9rem}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}}.card{{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 16px 35px #0004}}.disk-top{{display:flex;gap:14px;align-items:center}}.disk-icon{{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:#0c1628;border:1px solid var(--line);font-size:24px}}.disk-name{{font-size:1.18rem;font-weight:800;word-break:break-word}}.meta{{margin:14px 0 18px;display:flex;flex-wrap:wrap;gap:8px}}.badge{{background:#0c1628;border:1px solid var(--line);color:#c9d5e6;border-radius:999px;padding:6px 10px;font-size:.82rem}}button,.button{{display:inline-flex;justify-content:center;align-items:center;width:100%;border:0;border-radius:12px;padding:13px 16px;background:var(--blue);color:white;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}}button:hover,.button:hover{{background:var(--blue2)}}.secondary{{background:#25334a}}.danger{{background:#b91c1c}}input{{width:100%;margin-top:7px;padding:14px;border-radius:11px;border:1px solid #42516a;background:#0b1527;color:white;font:inherit}}label{{display:block;margin:16px 0 5px;font-weight:750}}.notice{{border-left:4px solid var(--amber)}}.success{{border-left:4px solid var(--green)}}.error{{border-left:4px solid var(--red)}}.actions{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}}.row{{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}}.row:last-child{{border-bottom:0}}.row form{{min-width:130px}}.backup-actions{{display:flex;gap:8px;flex-wrap:wrap}}.backup-actions form{{min-width:120px}}code{{color:#bfdbfe;word-break:break-all}}footer{{margin-top:25px;text-align:center;color:var(--muted);font-size:.83rem}}@media(max-width:600px){{header,.row{{align-items:flex-start;flex-direction:column}}.actions{{grid-template-columns:1fr}}.row form{{width:100%}}}}
 </style></head><body><main>{body}<footer>Zima Storage Manager v{APP_VERSION} · Created by Alex Lignola</footer></main></body></html>""".encode()
 
 
@@ -123,6 +123,12 @@ class AppHandler(BaseHTTPRequestHandler):
         elif path == "/backup/create": self._create_backup()
         elif path == "/backup/restore/confirm": self._restore_confirm(form)
         elif path == "/backup/restore": self._restore_backup(form)
+        elif path == "/backup/delete/confirm": self._delete_backup_confirm(form)
+        elif path == "/backup/delete": self._delete_backup(form)
+        elif path == "/backup/delete-all/confirm": self._delete_all_backups_confirm(form)
+        elif path == "/backup/delete-all": self._delete_all_backups(form)
+        elif path == "/history/clear/confirm": self._clear_history_confirm(form)
+        elif path == "/history/clear": self._clear_history(form)
         else: self.send_error(HTTPStatus.NOT_FOUND)
 
     def _login_page(self, error: str = "") -> None:
@@ -187,9 +193,34 @@ class AppHandler(BaseHTTPRequestHandler):
         rows = []
         for path in backups:
             stat = path.stat(); when = datetime.fromtimestamp(stat.st_mtime).strftime("%d/%m/%Y %H:%M:%S")
-            rows.append(f'<div class="row"><div><strong>{esc(path.name)}</strong><div class="small">{esc(when)} · {stat.st_size/1024:.1f} KiB</div></div><form method="post" action="/backup/restore/confirm"><input type="hidden" name="backup" value="{esc(path.name)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><button class="danger" type="submit">Ripristina</button></form></div>')
+            rows.append(
+                f'<div class="row"><div><strong>{esc(path.name)}</strong>'
+                f'<div class="small">{esc(when)} · {stat.st_size/1024:.1f} KiB</div></div>'
+                f'<div class="backup-actions"><form method="post" action="/backup/restore/confirm">'
+                f'<input type="hidden" name="backup" value="{esc(path.name)}">'
+                f'<input type="hidden" name="csrf" value="{esc(self._csrf())}">'
+                f'<button type="submit">Ripristina</button></form>'
+                f'<form method="post" action="/backup/delete/confirm">'
+                f'<input type="hidden" name="backup" value="{esc(path.name)}">'
+                f'<input type="hidden" name="csrf" value="{esc(self._csrf())}">'
+                f'<button class="danger" type="submit">Elimina</button></form></div></div>'
+            )
         content = ''.join(rows) if rows else '<p>Nessun backup disponibile.</p>'
-        body = self._header() + f'<div class="card"><h2>Backup database</h2><form method="post" action="/backup/create"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><button type="submit">Crea backup adesso</button></form></div><div class="card">{content}</div>'
+        delete_all = ''
+        if backups:
+            delete_all = (
+                f'<form method="post" action="/backup/delete-all/confirm">'
+                f'<input type="hidden" name="csrf" value="{esc(self._csrf())}">'
+                f'<button class="danger" type="submit">Elimina tutti i backup</button></form>'
+            )
+        body = self._header() + (
+            f'<div class="card"><h2>Backup database</h2><p class="small">'
+            f'Sono conservati automaticamente gli ultimi {self.config.backup_retention} backup.</p>'
+            f'<div class="actions"><form method="post" action="/backup/create">'
+            f'<input type="hidden" name="csrf" value="{esc(self._csrf())}">'
+            f'<button type="submit">Crea backup adesso</button></form>{delete_all}</div></div>'
+            f'<div class="card">{content}</div>'
+        )
         self._send(page("Backup", body))
 
     def _create_backup(self) -> None:
@@ -232,6 +263,48 @@ class AppHandler(BaseHTTPRequestHandler):
             return
         self._send(page("Ripristino completato", self._header() + '<div class="card success"><h2>Database ripristinato</h2><p>Il servizio di archiviazione è stato riavviato.</p><a class="button" href="/">Torna ai dischi</a></div>'))
 
+    def _delete_backup_confirm(self, form: dict[str, str]) -> None:
+        name = Path(form.get("backup", "")).name
+        if not name or name != form.get("backup", ""):
+            self._error("Nome backup non valido."); return
+        path = self.config.backup_dir / name
+        if not path.is_file():
+            self._error("Backup non trovato.", HTTPStatus.NOT_FOUND); return
+        nonce = secrets.token_urlsafe(18)
+        proof = hashlib.sha256(f"{self._session_id()}:delete-backup:{name}:{nonce}".encode()).hexdigest()
+        self._session()[f"delete-backup:{proof}"] = time.time() + CONFIRM_TTL
+        body = self._header() + f'<form class="card error" method="post" action="/backup/delete"><h2>Elimina backup</h2><p>Il file verrà eliminato definitivamente:</p><p><code>{esc(name)}</code></p><input type="hidden" name="backup" value="{esc(name)}"><input type="hidden" name="nonce" value="{esc(nonce)}"><input type="hidden" name="proof" value="{esc(proof)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><div class="actions"><a class="button secondary" href="/backups">Annulla</a><button class="danger" type="submit">Elimina definitivamente</button></div></form>'
+        self._send(page("Conferma eliminazione", body))
+
+    def _delete_backup(self, form: dict[str, str]) -> None:
+        name = Path(form.get("backup", "")).name
+        nonce, proof = form.get("nonce", ""), form.get("proof", "")
+        expected = hashlib.sha256(f"{self._session_id()}:delete-backup:{name}:{nonce}".encode()).hexdigest()
+        deadline = float(self._session().pop(f"delete-backup:{proof}", 0))
+        if not secrets.compare_digest(proof, expected) or deadline < time.time():
+            self._error("Conferma non valida o scaduta."); return
+        try: self.manager.delete_backup(name)
+        except Exception as exc: self._error(f"Eliminazione non riuscita: {exc}"); return
+        self._redirect("/backups")
+
+    def _delete_all_backups_confirm(self, form: dict[str, str]) -> None:
+        count = len(self.manager.backups())
+        nonce = secrets.token_urlsafe(18)
+        proof = hashlib.sha256(f"{self._session_id()}:delete-all-backups:{nonce}".encode()).hexdigest()
+        self._session()[f"delete-all-backups:{proof}"] = time.time() + CONFIRM_TTL
+        body = self._header() + f'<form class="card error" method="post" action="/backup/delete-all"><h2>Elimina tutti i backup</h2><p>Stai per eliminare definitivamente <strong>{count}</strong> backup.</p><input type="hidden" name="nonce" value="{esc(nonce)}"><input type="hidden" name="proof" value="{esc(proof)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><div class="actions"><a class="button secondary" href="/backups">Annulla</a><button class="danger" type="submit">Elimina tutti</button></div></form>'
+        self._send(page("Conferma eliminazione backup", body))
+
+    def _delete_all_backups(self, form: dict[str, str]) -> None:
+        nonce, proof = form.get("nonce", ""), form.get("proof", "")
+        expected = hashlib.sha256(f"{self._session_id()}:delete-all-backups:{nonce}".encode()).hexdigest()
+        deadline = float(self._session().pop(f"delete-all-backups:{proof}", 0))
+        if not secrets.compare_digest(proof, expected) or deadline < time.time():
+            self._error("Conferma non valida o scaduta."); return
+        try: self.manager.delete_all_backups()
+        except Exception as exc: self._error(f"Eliminazione non riuscita: {exc}"); return
+        self._redirect("/backups")
+
     def _diagnostics_page(self) -> None:
         data = self.manager.diagnostics()
         state_class = "success" if data["database_ok"] else "error"
@@ -245,7 +318,27 @@ class AppHandler(BaseHTTPRequestHandler):
         for item in self.manager.history(100):
             details = item.get("details", {}); action = item.get("action", "evento"); status = item.get("status", "")
             rows.append(f'<div class="row"><div><strong>{esc(action)}</strong> <span class="badge">{esc(status)}</span><div class="small">{esc(item.get("timestamp", ""))}</div><div class="small"><code>{esc(details)}</code></div></div></div>')
-        self._send(page("Cronologia", self._header() + '<div class="card"><h2>Cronologia operazioni</h2>' + (''.join(rows) or '<p>Nessuna operazione registrata.</p>') + '</div>'))
+        clear = ''
+        if rows:
+            clear = f'<form method="post" action="/history/clear/confirm"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><button class="danger" type="submit">Svuota cronologia</button></form>'
+        self._send(page("Cronologia", self._header() + f'<div class="card"><div class="row"><div><h2>Cronologia operazioni</h2><div class="small">Ultimi 100 eventi</div></div>{clear}</div>' + (''.join(rows) or '<p>Nessuna operazione registrata.</p>') + '</div>'))
+
+    def _clear_history_confirm(self, form: dict[str, str]) -> None:
+        nonce = secrets.token_urlsafe(18)
+        proof = hashlib.sha256(f"{self._session_id()}:clear-history:{nonce}".encode()).hexdigest()
+        self._session()[f"clear-history:{proof}"] = time.time() + CONFIRM_TTL
+        body = self._header() + f'<form class="card error" method="post" action="/history/clear"><h2>Svuota cronologia</h2><p>Tutti gli eventi registrati verranno eliminati definitivamente.</p><input type="hidden" name="nonce" value="{esc(nonce)}"><input type="hidden" name="proof" value="{esc(proof)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><div class="actions"><a class="button secondary" href="/history">Annulla</a><button class="danger" type="submit">Svuota definitivamente</button></div></form>'
+        self._send(page("Conferma pulizia cronologia", body))
+
+    def _clear_history(self, form: dict[str, str]) -> None:
+        nonce, proof = form.get("nonce", ""), form.get("proof", "")
+        expected = hashlib.sha256(f"{self._session_id()}:clear-history:{nonce}".encode()).hexdigest()
+        deadline = float(self._session().pop(f"clear-history:{proof}", 0))
+        if not secrets.compare_digest(proof, expected) or deadline < time.time():
+            self._error("Conferma non valida o scaduta."); return
+        try: self.manager.clear_history()
+        except Exception as exc: self._error(f"Pulizia non riuscita: {exc}"); return
+        self._redirect("/history")
 
     def _error(self, message: str, status: HTTPStatus = HTTPStatus.BAD_REQUEST) -> None:
         self._send(page("Errore", self._header() + f'<div class="card error"><h2>Operazione non riuscita</h2><p>{esc(message)}</p><a class="button secondary" href="/">Torna indietro</a></div>'), status)

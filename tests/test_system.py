@@ -77,3 +77,24 @@ def test_busy_processes_uses_compatible_fuser_flags(monkeypatch):
     inspector = SystemInspector(runner)
     assert inspector.busy_processes("/media/NAS4") == "1234"
     assert runner.calls[0] == ["fuser", "-m", "/media/NAS4"]
+
+
+def test_mount_device_mounts_and_verifies(monkeypatch, tmp_path):
+    monkeypatch.delenv("ZSM_HOST_NAMESPACE", raising=False)
+    runner = MountRunner([
+        Result([], 1, "", ""),
+        Result([], 0, "", ""),
+        Result([], 0, str(tmp_path / "NAS7") + "\n", ""),
+    ])
+    inspector = SystemInspector(runner)
+    target = str(tmp_path / "NAS7")
+    inspector.mount_device("/dev/sde1", target)
+    assert ["mount", "/dev/sde1", target] in runner.calls
+
+
+def test_read_filesystem_label_uses_blkid_probe(monkeypatch):
+    monkeypatch.delenv("ZSM_HOST_NAMESPACE", raising=False)
+    runner = MountRunner([Result([], 0, "NAS7\n", "")])
+    inspector = SystemInspector(runner)
+    assert inspector.read_filesystem_label("/dev/sde1") == "NAS7"
+    assert runner.calls[0] == ["blkid", "-p", "-s", "LABEL", "-o", "value", "/dev/sde1"]
