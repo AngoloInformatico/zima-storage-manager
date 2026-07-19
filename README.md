@@ -11,10 +11,6 @@ Interfaccia web per gestire in modo sicuro i nomi dei dischi e i punti di montag
 ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-blue)
 ![License](https://img.shields.io/badge/license-BSD--3--Clause-green)
 
-## Anteprima
-
-![Zima Storage Manager su ZimaOS](img/zima-storage-manager-dashboard.png)
-
 > Zima Storage Manager modifica il nome con cui ZimaOS registra e monta il disco, mantenendo coerenti il database Local Storage e il percorso di montaggio.
 
 ## Funzioni principali
