@@ -2,7 +2,7 @@ name: zima-storage-manager
 
 services:
   zima-storage-manager:
-    image: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc9
+    image: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc10
     container_name: zima-storage-manager
     hostname: zima-storage-manager
     restart: unless-stopped

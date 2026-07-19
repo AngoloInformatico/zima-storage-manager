@@ -1,6 +1,12 @@
 # Changelog
 
-## 3.0.0-rc9
+## 3.0.0-rc10
+
+- Corretto l’ordine degli import in `tests/test_history.py` per superare il controllo Ruff E402.
+- Consolidate nella release completa tutte le correzioni funzionali introdotte nella RC9.
+- Aggiornati riferimenti applicativi, Docker, Compose, installer e updater alla versione `3.0.0-rc10`.
+
+## 3.0.0-rc10
 
 - Rinomina transazionale completa: LABEL, record `o_disk`, mount reale e verifica finale devono coincidere.
 - Rimonta esplicitamente il dispositivo sul nuovo percorso prima di riavviare Local Storage.
