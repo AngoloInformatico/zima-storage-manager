@@ -1,26 +1,28 @@
-ZIMA STORAGE MANAGER 2.1.0 - RELEASE CANDIDATE
+ZIMA STORAGE MANAGER 3.0.0-RC1
 
-1. Conserva una copia della cartella attuale del progetto.
-2. Copia il contenuto di questo pacchetto nella cartella locale del repository.
+1. Estrai l'archivio.
+2. Copia il contenuto della cartella zima-storage-manager nel repository locale.
 3. Controlla le modifiche:
 
    git status
-   git diff
+   git diff --stat
 
-4. Pubblica:
+4. Pubblica sul ramo develop-v3:
 
+   git checkout develop-v3
    git add .
-   git commit -m "Release Zima Storage Manager v2.1.0"
-   git push
+   git commit -m "Release candidate Zima Storage Manager v3.0.0-rc1"
+   git push origin develop-v3
 
-5. Sul server ZimaOS esegui l'installazione nativa consigliata:
-
-   curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/main/install.sh | sudo bash
-
-6. Prima della prima rinomina verifica:
+TEST CONSIGLIATI PRIMA DELLA RINOMINA
 
    sudo zsm status
    sudo zsm disks
    sudo zsm audit
+   sudo zsm backup
 
-È incluso anche un pacchetto Docker sperimentale. Leggi docs/DOCKER.md prima di usarlo.
+INSTALLAZIONE DEL RAMO DI TEST
+
+   curl -fsSL https://raw.githubusercontent.com/AngoloInformatico/zima-storage-manager/develop-v3/install.sh | sudo ZSM_BRANCH=develop-v3 bash
+
+Aprire quindi http://IP_ZIMAOS:8765 e verificare la pagina Diagnostica.

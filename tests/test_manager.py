@@ -45,3 +45,18 @@ def test_restore_rejects_file_outside_backup_directory(tmp_path):
     outside.write_bytes(b"not a database")
     with pytest.raises(ValueError, match="cartella backup"):
         instance.restore(outside)
+
+
+def test_backup_retention_prunes_old_files(tmp_path, monkeypatch):
+    instance = manager(tmp_path, dry_run=False)
+    instance.config.backup_retention = 2
+    monkeypatch.setattr("zsm.core.manager.require_root", lambda: None)
+    for _ in range(4):
+        instance.create_backup()
+    assert len(instance.backups()) == 2
+
+
+def test_diagnostics_reports_valid_database(tmp_path):
+    data = manager(tmp_path).diagnostics()
+    assert data["database_ok"] is True
+    assert data["backup_count"] == 0

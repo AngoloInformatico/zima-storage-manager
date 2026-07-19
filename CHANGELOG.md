@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.0-rc1
+
+- Pagina diagnostica con stato database, servizio e configurazione attiva.
+- Ripristino backup protetto da doppia conferma monouso.
+- Conservazione automatica dei backup con soglia configurabile.
+- Validazione più rigorosa della configurazione JSON.
+- Session store protetto per accessi concorrenti.
+- Suite di test ampliata.
+
 ## 3.0.0-alpha2
 
 - Aggiunta pagina Web per creare e ripristinare i backup.

@@ -95,6 +95,7 @@ class StorageManager:
                     stopped = False
 
                 result["backup"] = str(backup)
+                self._prune_backups()
                 timeline(self.config.log_dir, "rename", "success", result)
                 return result
             except Exception:
@@ -112,10 +113,38 @@ class StorageManager:
     def history(self, limit: int = 100) -> list[dict]:
         return read_timeline(self.config.log_dir, limit)
 
+    def diagnostics(self) -> dict:
+        database_ok = False
+        database_error = ""
+        try:
+            self.db.validate()
+            database_ok = True
+        except Exception as exc:
+            database_error = str(exc)
+        return {
+            "database": str(self.config.database_path),
+            "database_ok": database_ok,
+            "database_error": database_error,
+            "service": self.system.service_state(self.config.service_name),
+            "service_name": self.config.service_name,
+            "mount_roots": [str(root) for root in self.config.mount_roots],
+            "backup_dir": str(self.config.backup_dir),
+            "backup_count": len(self.backups()),
+            "dry_run": self.dry_run,
+        }
+
     def backups(self) -> list[Path]:
         if not self.config.backup_dir.exists():
             return []
         return sorted(self.config.backup_dir.glob("local-storage-*.db"), reverse=True)
+
+    def _prune_backups(self) -> None:
+        backups = self.backups()
+        for old in backups[self.config.backup_retention :]:
+            try:
+                old.unlink()
+            except OSError as exc:
+                self.log.warning("Impossibile eliminare il vecchio backup %s: %s", old, exc)
 
     def create_backup(self) -> Path:
         if not self.dry_run:
@@ -124,6 +153,7 @@ class StorageManager:
             return self.config.backup_dir / "dry-run-backup.db"
         path = self.db.backup(self.config.backup_dir)
         timeline(self.config.log_dir, "backup", "success", {"path": str(path)})
+        self._prune_backups()
         return path
 
     def restore(self, path: Path) -> None:

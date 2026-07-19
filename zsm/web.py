@@ -5,6 +5,7 @@ import html
 import os
 import secrets
 import time
+import threading
 from datetime import datetime
 from http import HTTPStatus
 from http.cookies import SimpleCookie
@@ -12,14 +13,16 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
 
+from . import __version__
 from .config import Config
 from .core.manager import StorageManager
 from .core.system import validate_name
 
-APP_VERSION = "3.0.0-alpha2"
+APP_VERSION = __version__
 SESSION_TTL = 12 * 60 * 60
 CONFIRM_TTL = 10 * 60
 SESSIONS: dict[str, dict[str, object]] = {}
+SESSIONS_LOCK = threading.RLock()
 NOAUTH_SESSION: dict[str, object] = {"expires": float("inf"), "csrf": "no-auth"}
 
 
@@ -73,8 +76,10 @@ class AppHandler(BaseHTTPRequestHandler):
     def _session(self) -> dict[str, object] | None:
         if not self.password: return NOAUTH_SESSION
         now = time.time()
-        for sid in [key for key, data in SESSIONS.items() if float(data.get("expires", 0)) < now]: SESSIONS.pop(sid, None)
-        data = SESSIONS.get(self._session_id())
+        with SESSIONS_LOCK:
+            for sid in [key for key, data in SESSIONS.items() if float(data.get("expires", 0)) < now]:
+                SESSIONS.pop(sid, None)
+            data = SESSIONS.get(self._session_id())
         return data if data and float(data.get("expires", 0)) >= now else None
 
     def _csrf(self) -> str:
@@ -88,20 +93,22 @@ class AppHandler(BaseHTTPRequestHandler):
         self._redirect("/login"); return False
 
     def _header(self) -> str:
-        return '<header><div class="brand"><div class="logo">💾</div><div><h1>Zima Storage Manager</h1><div class="version">Gestione sicura dei nomi disco ZimaOS</div></div></div></header><nav><a href="/">Dischi</a><a href="/backups">Backup</a><a href="/history">Cronologia</a><a href="/logout">Esci</a></nav>'
+        return '<header><div class="brand"><div class="logo">💾</div><div><h1>Zima Storage Manager</h1><div class="version">Gestione sicura dei nomi disco ZimaOS</div></div></div></header><nav><a href="/">Dischi</a><a href="/backups">Backup</a><a href="/history">Cronologia</a><a href="/diagnostics">Diagnostica</a><a href="/logout">Esci</a></nav>'
 
     def do_GET(self) -> None:
         path = urlparse(self.path).path
         if path == "/health": self._send(b"OK", content_type="text/plain; charset=utf-8"); return
         if path == "/login": self._login_page(); return
         if path == "/logout":
-            SESSIONS.pop(self._session_id(), None)
+            with SESSIONS_LOCK:
+                SESSIONS.pop(self._session_id(), None)
             self._redirect("/login", {"Set-Cookie": "zsm_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0"}); return
         if not self._require_login(): return
         if path == "/": self._home()
         elif path == "/rename": self._rename_page()
         elif path == "/backups": self._backups_page()
         elif path == "/history": self._history_page()
+        elif path == "/diagnostics": self._diagnostics_page()
         else: self.send_error(HTTPStatus.NOT_FOUND)
 
     def do_POST(self) -> None:
@@ -114,6 +121,7 @@ class AppHandler(BaseHTTPRequestHandler):
         if path == "/confirm": self._confirm(form)
         elif path == "/apply": self._apply(form)
         elif path == "/backup/create": self._create_backup()
+        elif path == "/backup/restore/confirm": self._restore_confirm(form)
         elif path == "/backup/restore": self._restore_backup(form)
         else: self.send_error(HTTPStatus.NOT_FOUND)
 
@@ -126,7 +134,9 @@ class AppHandler(BaseHTTPRequestHandler):
     def _login(self) -> None:
         supplied = self._form().get("password", "")
         if not self.password or secrets.compare_digest(supplied, self.password):
-            sid = secrets.token_urlsafe(32); SESSIONS[sid] = {"expires": time.time() + SESSION_TTL, "csrf": secrets.token_urlsafe(32)}
+            sid = secrets.token_urlsafe(32)
+            with SESSIONS_LOCK:
+                SESSIONS[sid] = {"expires": time.time() + SESSION_TTL, "csrf": secrets.token_urlsafe(32)}
             cookie = f"zsm_session={sid}; Path=/; HttpOnly; SameSite=Strict; Max-Age={SESSION_TTL}" + ("; Secure" if self.cookie_secure else "")
             self._redirect("/", {"Set-Cookie": cookie}); return
         time.sleep(.6); self._login_page("Codice non corretto.")
@@ -177,7 +187,7 @@ class AppHandler(BaseHTTPRequestHandler):
         rows = []
         for path in backups:
             stat = path.stat(); when = datetime.fromtimestamp(stat.st_mtime).strftime("%d/%m/%Y %H:%M:%S")
-            rows.append(f'<div class="row"><div><strong>{esc(path.name)}</strong><div class="small">{esc(when)} · {stat.st_size/1024:.1f} KiB</div></div><form method="post" action="/backup/restore"><input type="hidden" name="backup" value="{esc(path.name)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><button class="danger" type="submit">Ripristina</button></form></div>')
+            rows.append(f'<div class="row"><div><strong>{esc(path.name)}</strong><div class="small">{esc(when)} · {stat.st_size/1024:.1f} KiB</div></div><form method="post" action="/backup/restore/confirm"><input type="hidden" name="backup" value="{esc(path.name)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><button class="danger" type="submit">Ripristina</button></form></div>')
         content = ''.join(rows) if rows else '<p>Nessun backup disponibile.</p>'
         body = self._header() + f'<div class="card"><h2>Backup database</h2><form method="post" action="/backup/create"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><button type="submit">Crea backup adesso</button></form></div><div class="card">{content}</div>'
         self._send(page("Backup", body))
@@ -187,12 +197,48 @@ class AppHandler(BaseHTTPRequestHandler):
         except Exception as exc: self._error(f"Backup non riuscito: {exc}"); return
         self._send(page("Backup creato", self._header() + f'<div class="card success"><h2>Backup creato</h2><p><code>{esc(path.name)}</code></p><a class="button" href="/backups">Torna ai backup</a></div>'))
 
+    def _restore_confirm(self, form: dict[str, str]) -> None:
+        name = Path(form.get("backup", "")).name
+        if not name or name != form.get("backup", ""):
+            self._error("Nome backup non valido.")
+            return
+        path = self.config.backup_dir / name
+        if not path.is_file():
+            self._error("Backup non trovato.", HTTPStatus.NOT_FOUND)
+            return
+        nonce = secrets.token_urlsafe(18)
+        proof = hashlib.sha256(f"{self._session_id()}:restore:{name}:{nonce}".encode()).hexdigest()
+        session = self._session()
+        session[f"restore:{proof}"] = time.time() + CONFIRM_TTL
+        body = self._header() + f'<form class="card error" method="post" action="/backup/restore"><h2>Conferma ripristino</h2><p>Stai per sostituire il database attivo con:</p><p><code>{esc(name)}</code></p><p class="small">ZSM creerà prima un ulteriore backup di sicurezza.</p><input type="hidden" name="backup" value="{esc(name)}"><input type="hidden" name="nonce" value="{esc(nonce)}"><input type="hidden" name="proof" value="{esc(proof)}"><input type="hidden" name="csrf" value="{esc(self._csrf())}"><div class="actions"><a class="button secondary" href="/backups">Annulla</a><button class="danger" type="submit">Ripristina database</button></div></form>'
+        self._send(page("Conferma ripristino", body))
+
     def _restore_backup(self, form: dict[str, str]) -> None:
         name = Path(form.get("backup", "")).name
-        if not name or name != form.get("backup", ""): self._error("Nome backup non valido."); return
-        try: self.manager.restore(self.config.backup_dir / name)
-        except Exception as exc: self._error(f"Ripristino non riuscito: {exc}"); return
+        nonce, proof = form.get("nonce", ""), form.get("proof", "")
+        expected = hashlib.sha256(f"{self._session_id()}:restore:{name}:{nonce}".encode()).hexdigest()
+        session = self._session()
+        deadline = float(session.pop(f"restore:{proof}", 0))
+        if not secrets.compare_digest(proof, expected) or deadline < time.time():
+            self._error("Conferma di ripristino non valida o scaduta.")
+            return
+        if not name or name != form.get("backup", ""):
+            self._error("Nome backup non valido.")
+            return
+        try:
+            self.manager.restore(self.config.backup_dir / name)
+        except Exception as exc:
+            self._error(f"Ripristino non riuscito: {exc}")
+            return
         self._send(page("Ripristino completato", self._header() + '<div class="card success"><h2>Database ripristinato</h2><p>Il servizio di archiviazione è stato riavviato.</p><a class="button" href="/">Torna ai dischi</a></div>'))
+
+    def _diagnostics_page(self) -> None:
+        data = self.manager.diagnostics()
+        state_class = "success" if data["database_ok"] else "error"
+        roots = "".join(f"<li><code>{esc(root)}</code></li>" for root in data["mount_roots"])
+        error = f'<p class="small">{esc(data["database_error"])}</p>' if data["database_error"] else ""
+        body = self._header() + f'<div class="card {state_class}"><h2>Stato sistema</h2><div class="row"><span>Database</span><strong>{"OK" if data["database_ok"] else "ERRORE"}</strong></div><div class="row"><span>Servizio</span><strong>{esc(data["service"])}</strong></div><div class="row"><span>Backup disponibili</span><strong>{esc(data["backup_count"])}</strong></div>{error}</div><div class="card"><h2>Configurazione attiva</h2><p>Database: <code>{esc(data["database"])}</code></p><p>Servizio: <code>{esc(data["service_name"])}</code></p><p>Cartella backup: <code>{esc(data["backup_dir"])}</code></p><p>Radici di montaggio:</p><ul>{roots}</ul></div>'
+        self._send(page("Diagnostica", body))
 
     def _history_page(self) -> None:
         rows = []

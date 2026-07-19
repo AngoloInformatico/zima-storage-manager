@@ -89,7 +89,7 @@ La modalità Docker è quindi disponibile per test e futura integrazione nello s
 
 Istruzioni complete: [`docs/DOCKER.md`](docs/DOCKER.md).
 
-## Verifiche eseguite sulla release 2.1.0
+## Verifiche della release candidate 3.0.0-rc1
 
 - compilazione dei moduli Python;
 - installazione del pacchetto in ambiente virtuale pulito;
@@ -103,6 +103,6 @@ Il test finale sul server ZimaOS reale è comunque necessario, perché versioni 
 Le immagini dei tag di release vengono pubblicate automaticamente per `linux/amd64` e `linux/arm64` su GitHub Container Registry. La configurazione completa è descritta in `docs/DOCKER.md`.
 
 
-## Funzioni Web v3 alpha2
+## Funzioni Web v3 RC1
 
-La Web UI include gestione dischi, backup manuali, ripristino controllato e cronologia delle operazioni. Tutte le azioni di scrittura richiedono autenticazione, token CSRF e una conferma esplicita.
+La Web UI include gestione dischi, backup manuali, ripristino con doppia conferma, cronologia e pagina diagnostica. Tutte le azioni di scrittura richiedono autenticazione, token CSRF e una conferma monouso con scadenza. I backup più vecchi vengono rimossi automaticamente secondo `backup_retention` (25 per impostazione predefinita).
