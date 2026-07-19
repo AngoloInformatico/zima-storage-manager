@@ -2,8 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop-v3]
+    branches: [main]
   pull_request:
+    branches: [main]
 
 permissions:
   contents: read
@@ -20,6 +21,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+      - name: Check release version consistency
+        run: python scripts/check-version.py
       - name: Install
         run: python -m pip install --upgrade pip && pip install -e '.[dev]'
       - name: Ruff
@@ -28,12 +31,16 @@ jobs:
         run: pytest -q
       - name: Compile
         run: python -m compileall -q zsm
+      - name: Bash syntax
+        run: bash -n install.sh uninstall.sh scripts/install-zimaos.sh scripts/update-zimaos.sh
 
   docker-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
+      - name: Validate Compose
+        run: docker compose config >/dev/null
       - name: Build image
         uses: docker/build-push-action@v6
         with:

@@ -1,6 +1,18 @@
 # Changelog
 
-## v3.0.0-rc4 - 2026-07-19
+## v3.0.0-rc5
+
+- introdotto il file unico `VERSION`;
+- aggiunto controllo automatico di coerenza della versione;
+- aggiunto installer/updater ZimaOS a un solo comando;
+- migrazione automatica di backup, report e log dai container precedenti;
+- aggiunto rollback automatico durante l'aggiornamento;
+- verifiche automatiche di healthcheck, versione e mount persistenti;
+- Compose completo con metadati ZimaOS per i volumi persistenti;
+- README completo con anteprima dashboard;
+- pipeline limitata al ramo `main`.
+
+## v3.0.0-rc5 - 2026-07-19
 
 - Resi persistenti i backup tramite `/DATA/AppData/zima-storage-manager/backups`.
 - Resi persistenti i report tramite `/DATA/AppData/zima-storage-manager/reports`.

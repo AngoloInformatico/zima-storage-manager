@@ -2,7 +2,7 @@ name: zima-storage-manager
 
 services:
   zima-storage-manager:
-    image: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc4
+    image: ghcr.io/angoloinformatico/zima-storage-manager:v3.0.0-rc5
     container_name: zima-storage-manager
     hostname: zima-storage-manager
     restart: unless-stopped
@@ -103,3 +103,16 @@ x-casaos:
       description:
         en_us: Web interface
         it_it: Interfaccia web
+  volumes:
+    - container: /var/lib/zsm/backups
+      description:
+        en_us: Persistent database backups
+        it_it: Backup persistenti del database
+    - container: /var/lib/zsm/reports
+      description:
+        en_us: Persistent operation reports
+        it_it: Report persistenti delle operazioni
+    - container: /var/log/zsm
+      description:
+        en_us: Persistent logs and timeline
+        it_it: Log e cronologia persistenti
