@@ -101,3 +101,8 @@ Il test finale sul server ZimaOS reale è comunque necessario, perché versioni 
 ## Docker e GitHub Container Registry
 
 Le immagini dei tag di release vengono pubblicate automaticamente per `linux/amd64` e `linux/arm64` su GitHub Container Registry. La configurazione completa è descritta in `docs/DOCKER.md`.
+
+
+## Funzioni Web v3 alpha2
+
+La Web UI include gestione dischi, backup manuali, ripristino controllato e cronologia delle operazioni. Tutte le azioni di scrittura richiedono autenticazione, token CSRF e una conferma esplicita.

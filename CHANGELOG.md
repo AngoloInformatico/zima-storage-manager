@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.0-alpha2
+
+- Aggiunta pagina Web per creare e ripristinare i backup.
+- Aggiunta cronologia delle operazioni letta dal timeline JSONL.
+- Aggiunta protezione CSRF a tutte le operazioni POST autenticate.
+- Aggiunta Content Security Policy e rafforzati gli header HTTP.
+- Limitato il ripristino ai soli backup generati nella cartella ZSM.
+- Aggiunti test per cronologia e validazione del percorso di ripristino.
+
+
 ## 3.0.0-alpha1
 
 - Avviata la linea 3.0 con pipeline CI per Python 3.10, 3.11 e 3.12.

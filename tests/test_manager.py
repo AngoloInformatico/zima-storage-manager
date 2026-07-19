@@ -37,3 +37,11 @@ def test_rename_preserves_existing_mount_root(tmp_path):
 def test_rename_rejects_same_name(tmp_path):
     with pytest.raises(ValueError, match="coincide"):
         manager(tmp_path).rename("ABC", "NAS2")
+
+
+def test_restore_rejects_file_outside_backup_directory(tmp_path):
+    instance = manager(tmp_path, dry_run=False)
+    outside = tmp_path / "outside.db"
+    outside.write_bytes(b"not a database")
+    with pytest.raises(ValueError, match="cartella backup"):
+        instance.restore(outside)

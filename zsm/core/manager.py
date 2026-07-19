@@ -4,6 +4,7 @@ import threading
 from pathlib import Path
 
 from .database import StorageDatabase
+from .history import read_timeline
 from .logging_setup import setup_logging, timeline
 from .system import SystemInspector, require_root, validate_name
 from ..config import Config
@@ -108,6 +109,9 @@ class StorageManager:
                 timeline(self.config.log_dir, "rename", "rolled-back", result)
                 raise
 
+    def history(self, limit: int = 100) -> list[dict]:
+        return read_timeline(self.config.log_dir, limit)
+
     def backups(self) -> list[Path]:
         if not self.config.backup_dir.exists():
             return []
@@ -123,6 +127,10 @@ class StorageManager:
         return path
 
     def restore(self, path: Path) -> None:
+        path = path.resolve()
+        backup_root = self.config.backup_dir.resolve()
+        if path.parent != backup_root or not path.name.startswith("local-storage-") or path.suffix != ".db":
+            raise ValueError("Il file selezionato non appartiene alla cartella backup di ZSM")
         require_root()
         with self._write_lock:
             safety = self.db.backup(self.config.backup_dir)
